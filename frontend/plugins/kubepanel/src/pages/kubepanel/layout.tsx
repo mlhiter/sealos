@@ -29,7 +29,7 @@ export default function AppLayout({ children, onClickSideNavItem }: Props) {
         <Sider
           style={{
             height: '100vh',
-            backgroundColor: '#f4f4f7',
+            backgroundColor: '#F2F2F4',
             position: 'fixed',
             left: 0,
             top: 0,
@@ -44,15 +44,7 @@ export default function AppLayout({ children, onClickSideNavItem }: Props) {
           <ResourceSideNav onClick={onClickSideNavItem} />
         </Sider>
         <Layout style={{ marginLeft: contentMargin }}>
-          <Content
-            style={{
-              backgroundColor: '#ffffff',
-              height: '100vh',
-              borderRadius: '1.5%'
-            }}
-          >
-            {children}
-          </Content>
+          <Content style={{ backgroundColor: '#F2F2F4' }}>{children}</Content>
         </Layout>
       </Layout>
     </ConfigProvider>
