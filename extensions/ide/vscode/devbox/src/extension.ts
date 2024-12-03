@@ -10,6 +10,7 @@ import { DevboxListViewProvider } from './providers/DevboxListViewProvider'
 import { NetworkViewProvider } from './providers/NetworkViewProvider'
 import { DBViewProvider } from './providers/DBViewProvider'
 import { GlobalStateManager } from './utils/globalStateManager'
+import { Chisel } from './utils/chisel'
 
 export async function activate(context: vscode.ExtensionContext) {
   // Logger
@@ -21,6 +22,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // globalState manager
   GlobalStateManager.init(context)
+
+  // chisel init
+  Chisel.init(context)
 
   // remote connector
   const remoteConnector = new RemoteSSHConnector(context)
