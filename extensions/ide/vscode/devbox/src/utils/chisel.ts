@@ -46,4 +46,8 @@ export class Chisel {
       }
     }
   }
+  static async startChiselClient(sshDomain: string, sshPort: string) {
+    // chisel client -v http://wpy-test.sealoshzh.site 0.0.0.0:2222
+    await execa('chisel', ['client', '-v', sshDomain, `0.0.0.0:${sshPort}`])
+  }
 }
