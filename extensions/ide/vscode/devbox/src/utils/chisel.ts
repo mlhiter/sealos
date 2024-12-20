@@ -7,6 +7,7 @@ import { Logger } from '../common/logger'
 export class Chisel {
   static async init(context: vscode.ExtensionContext) {
     Logger.info('Checking chisel...')
+
     try {
       // check chisel version
       await execa('chisel', ['--version'])
@@ -45,9 +46,5 @@ export class Chisel {
         vscode.window.showErrorMessage(`Chisel installed failed: ${error}`)
       }
     }
-  }
-  static async startChiselClient(sshDomain: string, sshPort: string) {
-    // chisel client -v http://wpy-test.sealoshzh.site 0.0.0.0:2222
-    await execa('chisel', ['client', '-v', sshDomain, `0.0.0.0:${sshPort}`])
   }
 }
