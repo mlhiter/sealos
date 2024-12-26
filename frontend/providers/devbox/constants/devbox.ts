@@ -66,7 +66,8 @@ export const CpuSlideMarkList = [
   { label: 2, value: 2000 },
   { label: 4, value: 4000 },
   { label: 8, value: 8000 },
-  { label: 16, value: 16000 }
+  { label: 16, value: 16000 },
+  { label: 32, value: 32000 }
 ]
 
 export const MemorySlideMarkList = [
@@ -78,7 +79,9 @@ export const MemorySlideMarkList = [
   { label: '8G', value: 8192 },
   // { label: '12G', value: 12288 },
   { label: '16G', value: 16384 },
-  { label: '32G', value: 32768 }
+  { label: '32G', value: 32768 },
+  { label: '64G', value: 65536 },
+  { label: '128G', value: 131072 }
 ]
 
 export const defaultDevboxEditValue: DevboxEditType = {
