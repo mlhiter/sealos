@@ -210,16 +210,31 @@
     "ms-vscode-remote.remote-ssh"
   ],
   "scripts": {
+    "publish:all": "npm run publish:win32-x64 && npm run publish:win32-arm64 && npm run publish:linux-x64 && npm run publish:linux-arm64 && npm run publish:darwin-x64 && npm run publish:darwin-arm64",
+    "publish:win32-x64": "cross-env PLATFORM=win32-x64 vsce publish --target win32-x64",
+    "publish:win32-arm64": "cross-env PLATFORM=win32-arm64 vsce publish --target win32-arm64",
+    "publish:linux-x64": "cross-env PLATFORM=linux-x64 vsce publish --target linux-x64",
+    "publish:linux-arm64": "cross-env PLATFORM=linux-arm64 vsce publish --target linux-arm64",
+    "publish:darwin-x64": "cross-env PLATFORM=darwin-x64 vsce publish --target darwin-x64",
+    "publish:darwin-arm64": "cross-env PLATFORM=darwin-arm64 vsce publish --target darwin-arm64",
     "vscode:prepublish": "npm run package",
+    "move-wst": "node scripts/move-wst.js",
+    "copy-codicons": "mkdir -p resources/codicons && cp -r node_modules/@vscode/codicons/dist/* resources/codicons/",
     "compile": "webpack",
-    "watch": "npm run copy-codicons && webpack --watch",
-    "package": "npm run copy-codicons && webpack --mode production --devtool hidden-source-map",
+    "watch": "cross-env PLATFORM=darwin-arm64 npm run move-wst -- $PLATFORM && npm run copy-codicons && webpack --watch",
+    "package": "npm run move-wst -- $PLATFORM && npm run copy-codicons && webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "copy-codicons": "mkdir -p resources/codicons && cp -r node_modules/@vscode/codicons/dist/* resources/codicons/",
     "lint": "eslint src",
     "test": "vscode-test"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.36",
+    "axios": "^1.7.5",
+    "dayjs": "^1.11.13",
+    "execa": "^9.5.1",
+    "ssh-config": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "20.x",
@@ -229,17 +244,12 @@
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
     "webpack": "^5.93.0",
     "webpack-cli": "^5.1.4"
-  },
-  "dependencies": {
-    "@vscode/codicons": "^0.0.36",
-    "axios": "^1.7.5",
-    "dayjs": "^1.11.13",
-    "execa": "^9.5.1",
-    "ssh-config": "^5.0.0"
   }
+
 }
