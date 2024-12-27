@@ -123,13 +123,20 @@ export class RemoteSSHConnector extends Disposable {
     base64PrivateKey: string
     sshHostLabel: string
     workingDir: string
+    wstUrl: string
   }) {
     Logger.info(`Connecting to remote SSH: ${args.sshHostLabel}`)
 
     this.ensureRemoteSSHExtInstalled()
 
-    const { sshDomain, sshPort, base64PrivateKey, sshHostLabel, workingDir } =
-      args
+    const {
+      sshDomain,
+      sshPort,
+      base64PrivateKey,
+      sshHostLabel,
+      workingDir,
+      wstUrl,
+    } = args
 
     const sshUser = sshDomain.split('@')[0]
     const sshHost = sshDomain.split('@')[1]
@@ -140,7 +147,7 @@ export class RemoteSSHConnector extends Disposable {
 
     const normalPrivateKey = Buffer.from(base64PrivateKey, 'base64')
 
-    const sshConfig = new SSHConfig().append({
+    let sshConfig = new SSHConfig().append({
       Host: sshHostLabel,
       HostName: sshHost,
       User: sshUser,
@@ -149,6 +156,19 @@ export class RemoteSSHConnector extends Disposable {
       IdentitiesOnly: 'yes',
       StrictHostKeyChecking: 'no',
     })
+    if (wstUrl) {
+      sshConfig = new SSHConfig().append({
+        Host: sshHostLabel,
+        HostName: '127.0.0.1',
+        User: sshUser,
+        Port: sshPort,
+        IdentityFile: `~/.ssh/sealos/${sshHostLabel}`,
+        ProxyCommand: `~/.ssh/sealos/bin/wst -target ${wstUrl}`,
+        IdentitiesOnly: 'yes',
+        StrictHostKeyChecking: 'no',
+      })
+    }
+
     const sshConfigString = SSHConfig.stringify(sshConfig)
 
     GlobalStateManager.addApiRegion(sshHost)

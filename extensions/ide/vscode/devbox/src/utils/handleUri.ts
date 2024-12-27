@@ -63,6 +63,7 @@ export class UriHandler {
       workingDir: queryParams.get('workingDir'),
       sshHostLabel: queryParams.get('sshHostLabel'), // usw.sailos.io_ns-admin_devbox-1
       token: queryParams.get('token'),
+      wstUrl: queryParams.get('wstUrl'),
     }
   }
 
@@ -73,7 +74,8 @@ export class UriHandler {
       params.base64PrivateKey &&
       params.sshHostLabel &&
       params.workingDir &&
-      params.token
+      params.token &&
+      params.wstUrl
     )
   }
 }

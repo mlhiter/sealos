@@ -32,7 +32,6 @@ export class Wst {
             )
             await fs.promises.mkdir(targetDir, { recursive: true })
             await fs.promises.copyFile(wstPath, path.join(targetDir, 'wst.exe'))
-
             break
           case 'darwin':
           case 'linux':
@@ -45,6 +44,7 @@ export class Wst {
             )
             await fs.promises.mkdir(targetDir, { recursive: true })
             await fs.promises.copyFile(wstPath, path.join(targetDir, 'wst'))
+            await execa('chmod', ['+x', path.join(targetDir, 'wst')])
 
             break
           default:
