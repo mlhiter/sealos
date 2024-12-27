@@ -1,8 +1,9 @@
 import * as os from 'os'
+import * as fs from 'fs'
 import * as path from 'path'
+import { execa } from 'execa'
 import * as vscode from 'vscode'
 
-import { execa } from 'execa'
 import { Logger } from '../common/logger'
 
 export class Wst {
@@ -19,7 +20,7 @@ export class Wst {
       try {
         const extensionPath = context.extensionPath
         let wstPath = ''
-        let currentPath = ''
+        const targetDir = path.join(os.homedir(), '.ssh', 'sealos', 'bin')
 
         switch (platform) {
           case 'win32':
@@ -29,14 +30,9 @@ export class Wst {
               'wst-release',
               'wst.exe'
             )
+            await fs.promises.mkdir(targetDir, { recursive: true })
+            await fs.promises.copyFile(wstPath, path.join(targetDir, 'wst.exe'))
 
-            currentPath = process.env.PATH || ''
-            if (!currentPath.includes(wstPath)) {
-              await execa('powershell.exe', [
-                '-Command',
-                `[Environment]::SetEnvironmentVariable("Path", "$env:Path;${wstPath}", "User")`,
-              ])
-            }
             break
           case 'darwin':
           case 'linux':
@@ -47,45 +43,8 @@ export class Wst {
               'wst-release',
               'wst'
             )
-            currentPath = process.env.PATH || ''
-            if (!currentPath.includes(wstPath)) {
-              const homeDir = os.homedir()
-              const shellConfigFiles = []
-
-              const currentShell = process.env.SHELL || ''
-
-              if (currentShell.includes('zsh')) {
-                shellConfigFiles.push(path.join(homeDir, '.zshrc'))
-              } else if (currentShell.includes('bash')) {
-                shellConfigFiles.push(path.join(homeDir, '.bashrc'))
-              }
-
-              shellConfigFiles.push(
-                path.join(homeDir, '.profile'),
-                path.join(homeDir, '.bash_profile')
-              )
-
-              const pathEntry = `\nexport PATH="$PATH:${wstPath}"\n`
-              for (const configFile of shellConfigFiles) {
-                try {
-                  const { access } = require('fs/promises')
-                  await access(configFile)
-                  await execa('sh', [
-                    '-c',
-                    `echo '${pathEntry}' >> "${configFile}"`,
-                  ])
-                  await execa('sh', ['-c', `source ${configFile}`])
-                  Logger.info(`Updated PATH in ${configFile}`)
-                  break
-                } catch (error) {
-                  Logger.debug(`Skipping ${configFile}: ${error}`)
-                  continue
-                }
-              }
-
-              // 立即更新当前进程的 PATH
-              process.env.PATH = `${process.env.PATH}:${wstPath}`
-            }
+            await fs.promises.mkdir(targetDir, { recursive: true })
+            await fs.promises.copyFile(wstPath, path.join(targetDir, 'wst'))
 
             break
           default:
