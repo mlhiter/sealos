@@ -13,6 +13,9 @@ export const ensureFileAccessPermission = async (path: string) => {
       if (!username) {
         throw new Error('can not get username')
       }
+      if (username === 'Administrator' || username === '管理员') {
+        return
+      }
       // await execa('icacls', [path, '/grant:r', `${username}:F`])
       await execa('icacls', [path, '/inheritance:d'])
       await execa('icacls', [path, '/remove:g', 'everyone'])
