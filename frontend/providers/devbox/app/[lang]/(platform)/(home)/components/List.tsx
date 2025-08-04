@@ -118,12 +118,31 @@ const DevboxList = ({
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex w-full flex-1 flex-col leading-none">
-                    <span className="min-w-20 truncate text-sm font-medium">{item.name}</span>
+                <div className="flex w-full flex-1 flex-col leading-none">
+                  <div className="group flex items-center gap-1">
+                    <TooltipTrigger asChild>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                        {item.name}
+                      </span>
+                    </TooltipTrigger>
+
+                    {!item.remark && (
+                      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <PencilLine
+                          className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500"
+                          onClick={() => {
+                            setOnOpenEditRemark(true);
+                            setEditRemarkItem(item);
+                          }}
+                        />
+                        <span className="text-sm text-zinc-500">{t('set_remarks')}</span>
+                      </div>
+                    )}
+                  </div>
+                  {item.remark && (
                     <div className="group flex w-[80%] items-center gap-1">
                       <span className="truncate text-xs font-normal text-zinc-500">
-                        {item.remark || t('no_devbox_remark_set')}
+                        {item.remark}
                       </span>
                       <PencilLine
                         className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100"
@@ -133,8 +152,8 @@ const DevboxList = ({
                         }}
                       />
                     </div>
-                  </div>
-                </TooltipTrigger>
+                  )}
+                </div>
                 <TooltipContent
                   side="bottom"
                   align="start"
@@ -144,13 +163,15 @@ const DevboxList = ({
                     <span className="w-15 text-zinc-600">{t('name')}</span>
                     <span className="break-all text-zinc-900">{item.name}</span>
                   </div>
-                  <Separator className="bg-zinc-100" />
-                  <div className="flex w-full gap-2">
-                    <span className="w-15 text-zinc-600">{t('remark')}</span>
-                    <div className="break-all text-zinc-900">
-                      {item.remark || t('no_devbox_remark_set')}
-                    </div>
-                  </div>
+                  {!!item.remark && (
+                    <>
+                      <Separator className="bg-zinc-100" />
+                      <div className="flex w-full gap-2">
+                        <span className="w-15 text-zinc-600">{t('remark')}</span>
+                        <div className="break-all text-zinc-900">{item.remark}</div>
+                      </div>
+                    </>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </div>

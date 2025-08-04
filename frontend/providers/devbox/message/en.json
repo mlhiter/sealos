@@ -344,6 +344,7 @@
   "select_version": "Select runtime version",
   "service": "Service",
   "set_auto_refresh": "Set automatic refresh",
+  "set_remarks": "set remarks",
   "set_template_to_public_tips": "Make this template available to all users. Once public, you cannot revert it to private.",
   "setup_complete": "Setup Complete",
   "shutdown": "Shutdown",

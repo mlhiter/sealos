@@ -345,6 +345,7 @@
   "select_version": "选择模板版本",
   "service": "服务",
   "set_auto_refresh": "设置自动刷新间隔",
+  "set_remarks": "设置备注",
   "set_template_to_public_tips": "设为公开后，其他用户可访问此模板，但无法再设为私密",
   "setup_complete": "配置完成",
   "shutdown": "关机",
