@@ -82,7 +82,7 @@ const DevboxList = ({
         cell: ({ row }) => {
           const item = row.original;
           return (
-            <div className="flex min-w-fit cursor-pointer items-center gap-2">
+            <div className="flex w-full cursor-pointer items-center gap-2 pr-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
@@ -115,7 +115,7 @@ const DevboxList = ({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="max-w-20 truncate text-sm font-medium">{item.name}</span>
+                  <span className="min-w-20 truncate text-sm font-medium">{item.name}</span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="start" sideOffset={1} className="max-w-40">
                   <span className="text-sm break-words">{item.name}</span>
