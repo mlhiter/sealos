@@ -45,8 +45,10 @@ import ReleaseModal from '@/components/dialogs/ReleaseDialog';
 import ShutdownModal from '@/components/dialogs/ShutdownDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { track } from '@sealos/gtm';
+import { Separator } from '@/components/ui/separator';
 
-const DeleteDevboxModal = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
+const DeleteDevboxDialog = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
+const EditRemarkDialog = dynamic(() => import('@/components/dialogs/EditRemarkDialog'));
 
 const PAGE_SIZE = 10;
 
@@ -68,7 +70,8 @@ const DevboxList = ({
   const [currentDevboxListItem, setCurrentDevboxListItem] = useState<DevboxListItemTypeV2 | null>(
     null
   );
-
+  const [editRemarkItem, setEditRemarkItem] = useState<DevboxListItemTypeV2 | null>(null);
+  const [onOpenEditRemark, setOnOpenEditRemark] = useState(false);
   const handleOpenRelease = useCallback((devbox: DevboxListItemTypeV2) => {
     setCurrentDevboxListItem(devbox);
     setOnOpenRelease(true);
@@ -79,13 +82,14 @@ const DevboxList = ({
       {
         accessorKey: 'name',
         header: t('name'),
+        size: 250,
         cell: ({ row }) => {
           const item = row.original;
           return (
-            <div className="flex w-full cursor-pointer items-center gap-2 pr-2">
+            <div className="flex w-full cursor-pointer items-center gap-2 pr-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
+                  <div className="flex h-8 min-w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
                     <Image
                       width={21}
                       height={21}
@@ -115,10 +119,38 @@ const DevboxList = ({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="min-w-20 truncate text-sm font-medium">{item.name}</span>
+                  <div className="flex w-full flex-1 flex-col leading-none">
+                    <span className="min-w-20 truncate text-sm font-medium">{item.name}</span>
+                    <div className="group flex w-[80%] items-center gap-1">
+                      <span className="truncate text-xs font-normal text-zinc-500">
+                        {item.remark || t('no_devbox_remark_set')}
+                      </span>
+                      <PencilLine
+                        className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => {
+                          setOnOpenEditRemark(true);
+                          setEditRemarkItem(item);
+                        }}
+                      />
+                    </div>
+                  </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" sideOffset={1} className="max-w-40">
-                  <span className="text-sm break-words">{item.name}</span>
+                <TooltipContent
+                  side="bottom"
+                  align="start"
+                  className="flex w-fit max-w-60 flex-col gap-2 p-4 text-sm/5"
+                >
+                  <div className="flex w-full gap-2">
+                    <span className="w-15 text-zinc-600">{t('name')}</span>
+                    <span className="break-all text-zinc-900">{item.name}</span>
+                  </div>
+                  <Separator className="bg-zinc-100" />
+                  <div className="flex w-full gap-2">
+                    <span className="w-15 text-zinc-600">{t('remark')}</span>
+                    <div className="break-all text-zinc-900">
+                      {item.remark || t('no_devbox_remark_set')}
+                    </div>
+                  </div>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -346,7 +378,7 @@ const DevboxList = ({
 
       {/* dialogs */}
       {!!delDevbox && (
-        <DeleteDevboxModal
+        <DeleteDevboxDialog
           devbox={delDevbox}
           onClose={() => setDelDevbox(null)}
           onSuccess={refetchDevboxList}
@@ -378,6 +410,22 @@ const DevboxList = ({
             setOnOpenShutdown(false);
           }}
           devbox={currentDevboxListItem}
+        />
+      )}
+      {!!editRemarkItem && (
+        <EditRemarkDialog
+          open={!!onOpenEditRemark}
+          onSuccess={() => {
+            refetchDevboxList();
+            setOnOpenEditRemark(false);
+            setEditRemarkItem(null);
+          }}
+          onClose={() => {
+            setOnOpenEditRemark(false);
+            setEditRemarkItem(null);
+          }}
+          devboxName={editRemarkItem.name}
+          currentRemark={editRemarkItem.remark}
         />
       )}
     </>
