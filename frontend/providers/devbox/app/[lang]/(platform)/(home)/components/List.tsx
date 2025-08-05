@@ -12,7 +12,8 @@ import {
   Play,
   SquareTerminal,
   Trash2,
-  Triangle
+  ArrowUpWideNarrow,
+  ArrowDownWideNarrow
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import {
@@ -32,6 +33,7 @@ import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from '@/i18n';
+import { useDateTimeStore } from '@/stores/date';
 import { DevboxListItemTypeV2, DevboxStatusMapType } from '@/types/devbox';
 import { DevboxStatusEnum, devboxStatusMap } from '@/constants/devbox';
 import { generateMockMonitorData } from '@/constants/mock';
@@ -54,6 +56,7 @@ import ShutdownModal from '@/components/dialogs/ShutdownDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { track } from '@sealos/gtm';
 import { Polygon } from '@/components/Polygon';
+import DatePicker from '@/components/DatePicker';
 
 const DeleteDevboxModal = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
 
@@ -70,6 +73,13 @@ const statusFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterVal
     }
     return filter === status.value;
   });
+};
+
+const dateFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterValue) => {
+  if (!filterValue || !filterValue.startDateTime || !filterValue.endDateTime) return true;
+  const createTime = row.getValue(columnId) as string;
+  const createTimeDate = new Date(createTime);
+  return createTimeDate >= filterValue.startDateTime && createTimeDate <= filterValue.endDateTime;
 };
 
 const DevboxList = ({
@@ -112,7 +122,7 @@ const DevboxList = ({
         header: ({ column }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 hover:bg-transparent">
+              <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
                 {column.getIsSorted() === 'desc' ? (
                   <ArrowDownAZ className="h-4 w-4 shrink-0 text-blue-600" />
                 ) : (
@@ -125,10 +135,10 @@ const DevboxList = ({
                   fillColor={column.getIsSorted() ? '#2563EB' : '#A1A1AA'}
                   className="h-1.5 w-3 shrink-0"
                 />
-              </Button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <div className="flex items-center px-1 py-1.5 text-sm text-zinc-500">
+              <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
                 {t('order')}
               </div>
               <DropdownMenuItem
@@ -224,12 +234,25 @@ const DevboxList = ({
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
+                <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
                   {t('status')}
-                  <Triangle className="h-3 w-3 shrink-0" />
-                </Button>
+                  <Polygon
+                    fillColor={
+                      Object.values(devboxStatusMap)
+                        .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
+                        .map((status) => status.value)
+                        .every((value) => statusFilter.includes(value))
+                        ? '#A1A1AA'
+                        : '#2563EB'
+                    }
+                    className="h-1.5 w-3 shrink-0"
+                  />
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
+                <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
+                  {t('status')}
+                </div>
                 {statusOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
@@ -243,12 +266,9 @@ const DevboxList = ({
                       );
                     }}
                   >
-                    <DevboxStatusTag
-                      status={option}
-                      isShutdown={option.value === DevboxStatusEnum.Shutdown}
-                    />
+                    <DevboxStatusTag status={option} className="font-normal" />
                     {statusFilter.includes(option.value) && (
-                      <Check className="h-4 w-4 text-emerald-600" />
+                      <Check className="h-4 w-4 text-blue-600" />
                     )}
                   </DropdownMenuItem>
                 ))}
@@ -298,15 +318,59 @@ const DevboxList = ({
       },
       {
         accessorKey: 'createTime',
+        enableColumnFilter: true,
+        filterFn: dateFilterFn,
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="flex items-center gap-2"
-          >
-            {t('create_time')}
-            {column.getIsSorted() === 'asc' ? '↑' : column.getIsSorted() === 'desc' ? '↓' : ''}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
+                {column.getIsSorted() === 'desc' ? (
+                  <ArrowDownWideNarrow className="h-4 w-4 shrink-0 text-blue-600" />
+                ) : (
+                  <ArrowUpWideNarrow
+                    className={`h-4 w-4 shrink-0 ${column.getIsSorted() === 'asc' ? 'text-blue-600' : ''}`}
+                  />
+                )}
+                {t('create_time')}
+                <Polygon
+                  fillColor={column.getIsSorted() ? '#2563EB' : '#A1A1AA'}
+                  className="h-1.5 w-3 shrink-0"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[290px]">
+              <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
+                {t('time_range')}
+              </div>
+              <div className="p-2">
+                <DatePicker />
+              </div>
+              <DropdownMenuSeparator />
+              <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
+                {t('order')}
+              </div>
+              <DropdownMenuItem
+                onClick={() => column.toggleSorting(false)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowUpWideNarrow className="mr-2 h-4 w-4 text-zinc-500" />
+                  {t('oldest_first')}
+                </div>
+                {column.getIsSorted() === 'asc' && <Check className="h-4 w-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => column.toggleSorting(true)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowDownWideNarrow className="mr-2 h-4 w-4 text-zinc-500" />
+                  {t('newest_first')}
+                </div>
+                {column.getIsSorted() === 'desc' && <Check className="h-4 w-4 text-blue-600" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
         size: 150,
         cell: ({ row }) => {
@@ -419,8 +483,10 @@ const DevboxList = ({
       }
     ],
     // NOTE: do not add dependency, it will cause infinite re-render
-    []
+    [statusFilter]
   );
+
+  const { startDateTime, endDateTime } = useDateTimeStore();
 
   const table = useReactTable({
     data: devboxList,
@@ -433,10 +499,14 @@ const DevboxList = ({
     state: {
       sorting,
       globalFilter: searchQuery,
-      columnFilters: [{ id: 'status', value: statusFilter }]
+      columnFilters: [
+        { id: 'status', value: statusFilter },
+        { id: 'createTime', value: { startDateTime, endDateTime } }
+      ]
     },
     filterFns: {
-      status: statusFilterFn
+      status: statusFilterFn,
+      date: dateFilterFn
     },
     initialState: {
       pagination: {
