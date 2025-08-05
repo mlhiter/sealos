@@ -127,14 +127,14 @@ const DevboxList = ({
                     </TooltipTrigger>
 
                     {!item.remark && (
-                      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <PencilLine
-                          className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500"
-                          onClick={() => {
-                            setOnOpenEditRemark(true);
-                            setEditRemarkItem(item);
-                          }}
-                        />
+                      <div
+                        className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity select-none group-hover:opacity-100"
+                        onClick={() => {
+                          setOnOpenEditRemark(true);
+                          setEditRemarkItem(item);
+                        }}
+                      >
+                        <PencilLine className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500" />
                         <span className="text-sm text-zinc-500">{t('set_remarks')}</span>
                       </div>
                     )}

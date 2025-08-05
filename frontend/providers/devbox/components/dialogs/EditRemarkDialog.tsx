@@ -49,11 +49,12 @@ const EditRemarkDialog = ({ open, onClose, onSuccess, devboxName, currentRemark 
         <DialogHeader>
           <DialogTitle>{t('edit_remark')}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-900">{t('remark')}</span>
           <Input
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            placeholder={t('enter_remark')}
+            placeholder={t('remark_input_placeholder')}
             maxLength={64}
           />
         </div>
