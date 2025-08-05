@@ -2,13 +2,17 @@
 
 import {
   ArrowBigUpDash,
+  ArrowDownAZ,
+  ArrowUpAZ,
+  Check,
   Ellipsis,
   IterationCw,
   Pause,
   PencilLine,
   Play,
   SquareTerminal,
-  Trash2
+  Trash2,
+  Triangle
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import {
@@ -16,7 +20,11 @@ import {
   getPaginationRowModel,
   useReactTable,
   flexRender,
-  type ColumnDef
+  type ColumnDef,
+  type FilterFn,
+  getSortedRowModel,
+  getFilteredRowModel,
+  type SortingState
 } from '@tanstack/react-table';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -24,8 +32,8 @@ import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from '@/i18n';
-import { DevboxListItemTypeV2 } from '@/types/devbox';
-import { DevboxStatusEnum } from '@/constants/devbox';
+import { DevboxListItemTypeV2, DevboxStatusMapType } from '@/types/devbox';
+import { DevboxStatusEnum, devboxStatusMap } from '@/constants/devbox';
 import { generateMockMonitorData } from '@/constants/mock';
 import { useControlDevbox } from '@/hooks/useControlDevbox';
 
@@ -45,17 +53,33 @@ import ReleaseModal from '@/components/dialogs/ReleaseDialog';
 import ShutdownModal from '@/components/dialogs/ShutdownDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { track } from '@sealos/gtm';
+import { Polygon } from '@/components/Polygon';
 
 const DeleteDevboxModal = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
 
 const PAGE_SIZE = 10;
 
+const statusFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterValue) => {
+  if (!filterValue || filterValue.length === 0) return true;
+  const status = row.getValue(columnId) as DevboxStatusMapType;
+  return filterValue.some((filter: string) => {
+    if (filter === DevboxStatusEnum.Stopped) {
+      return (
+        status.value === DevboxStatusEnum.Stopped || status.value === DevboxStatusEnum.Shutdown
+      );
+    }
+    return filter === status.value;
+  });
+};
+
 const DevboxList = ({
   devboxList = [],
-  refetchDevboxList
+  refetchDevboxList,
+  searchQuery = ''
 }: {
   devboxList: DevboxListItemTypeV2[];
   refetchDevboxList: () => void;
+  searchQuery?: string;
 }) => {
   const router = useRouter();
   const t = useTranslations();
@@ -68,6 +92,13 @@ const DevboxList = ({
   const [currentDevboxListItem, setCurrentDevboxListItem] = useState<DevboxListItemTypeV2 | null>(
     null
   );
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => {
+    // Initialize with all available statuses except Shutdown
+    return Object.values(devboxStatusMap)
+      .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
+      .map((status) => status.value);
+  });
 
   const handleOpenRelease = useCallback((devbox: DevboxListItemTypeV2) => {
     setCurrentDevboxListItem(devbox);
@@ -78,7 +109,51 @@ const DevboxList = ({
     () => [
       {
         accessorKey: 'name',
-        header: t('name'),
+        header: ({ column }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 hover:bg-transparent">
+                {column.getIsSorted() === 'desc' ? (
+                  <ArrowDownAZ className="h-4 w-4 shrink-0 text-blue-600" />
+                ) : (
+                  <ArrowUpAZ
+                    className={`h-4 w-4 shrink-0 ${column.getIsSorted() === 'asc' ? 'text-blue-600' : ''}`}
+                  />
+                )}
+                {t('name')}
+                <Polygon
+                  fillColor={column.getIsSorted() ? '#2563EB' : '#A1A1AA'}
+                  className="h-1.5 w-3 shrink-0"
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <div className="flex items-center px-1 py-1.5 text-sm text-zinc-500">
+                {t('order')}
+              </div>
+              <DropdownMenuItem
+                onClick={() => column.toggleSorting(false)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowUpAZ className="h-4 w-4 shrink-0" />
+                  {t('sort.asc')}
+                </div>
+                {column.getIsSorted() === 'asc' && <Check className="h-4 w-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => column.toggleSorting(true)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowDownAZ className="h-4 w-4 shrink-0" />
+                  {t('sort.desc')}
+                </div>
+                {column.getIsSorted() === 'desc' && <Check className="h-4 w-4 text-blue-600" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
         cell: ({ row }) => {
           const item = row.original;
           return (
@@ -127,7 +202,60 @@ const DevboxList = ({
       },
       {
         accessorKey: 'status',
-        header: t('status'),
+        enableColumnFilter: true,
+        filterFn: statusFilterFn,
+        header: ({ column }) => {
+          const existingStatuses = new Set(
+            devboxList.map((item) =>
+              item.status.value === DevboxStatusEnum.Shutdown
+                ? DevboxStatusEnum.Stopped
+                : item.status.value
+            )
+          );
+
+          const statusOptions = Object.values(devboxStatusMap).filter((status) => {
+            if (status.value === DevboxStatusEnum.Shutdown) return false;
+            if (status.value === DevboxStatusEnum.Stopped) {
+              return existingStatuses.has(DevboxStatusEnum.Stopped);
+            }
+            return existingStatuses.has(status.value);
+          }) as DevboxStatusMapType[];
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  {t('status')}
+                  <Triangle className="h-3 w-3 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {statusOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    className="flex w-full cursor-pointer items-center justify-between px-2 py-1.5"
+                    onClick={() => {
+                      const isSelected = statusFilter.includes(option.value);
+                      setStatusFilter(
+                        isSelected
+                          ? statusFilter.filter((value) => value !== option.value)
+                          : [...statusFilter, option.value]
+                      );
+                    }}
+                  >
+                    <DevboxStatusTag
+                      status={option}
+                      isShutdown={option.value === DevboxStatusEnum.Shutdown}
+                    />
+                    {statusFilter.includes(option.value) && (
+                      <Check className="h-4 w-4 text-emerald-600" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
         cell: ({ row }) => {
           const item = row.original;
           return (
@@ -170,7 +298,16 @@ const DevboxList = ({
       },
       {
         accessorKey: 'createTime',
-        header: t('create_time'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="flex items-center gap-2"
+          >
+            {t('create_time')}
+            {column.getIsSorted() === 'asc' ? '↑' : column.getIsSorted() === 'desc' ? '↓' : ''}
+          </Button>
+        ),
         size: 150,
         cell: ({ row }) => {
           const item = row.original;
@@ -281,6 +418,7 @@ const DevboxList = ({
         }
       }
     ],
+    // NOTE: do not add dependency, it will cause infinite re-render
     []
   );
 
@@ -289,6 +427,17 @@ const DevboxList = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+      globalFilter: searchQuery,
+      columnFilters: [{ id: 'status', value: statusFilter }]
+    },
+    filterFns: {
+      status: statusFilterFn
+    },
     initialState: {
       pagination: {
         pageSize: PAGE_SIZE

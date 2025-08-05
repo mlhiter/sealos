@@ -148,6 +148,7 @@
   "edit_template": "Edit Template",
   "edit_version_description": "Edit Version Description",
   "enabled": "Enabled",
+  "end_time_cannot_be_future": "End time cannot be later than current time",
   "enter_devbox_name": "Please enter the DevBox name",
   "enter_version_description": "Briefly describe the purpose and features of this release.",
   "enter_version_number": "Please enter the tag",
@@ -185,6 +186,8 @@
   "input_template_version_placeholder": "Enter version (e.g. 1.0.0)",
   "internal_address": "Internal Address",
   "internal_debug_address": "Internal Address",
+  "invalid_date_format": "Invalid date format",
+  "invalid_time_format": "Invalid time format",
   "invalide_template_name": "Please enter a valid template name",
   "invalide_template_version": "Please enter a valid version number",
   "jetbrains_guide_cancel": "Click to Cancel",
@@ -266,6 +269,7 @@
   "open_link": "Open link",
   "open_vscode": "VS Code",
   "opening_ide": "Opening IDE...",
+  "order": "Order",
   "os": "OS",
   "outstanding_tips": "Due to an outstanding balance on your account, you are unable to Create New Project. Please add funds to your account as soon as possible.",
   "overview": "Overview",
@@ -325,6 +329,7 @@
   "save_template": "Save Changes",
   "saving": "Cost-saving",
   "scan_templates": "Browse Templates",
+  "search_name_placeholder": "Search name",
   "search_or_add_version": "Search or add version",
   "select": "Select",
   "select_action_for_template": "Select the template you wish to update",
@@ -341,6 +346,10 @@
   "setup_complete": "Setup Complete",
   "shutdown": "Shutdown",
   "skip": "Skip",
+  "sort": {
+    "asc": "A-Z",
+    "desc": "Z-A"
+  },
   "ssh_config": "SSH Connection",
   "ssh_connect_info": "SSH Connection String",
   "start": "Start",
@@ -400,8 +409,5 @@
   "vm": "vm",
   "vscode": "VS Code",
   "vscode_tooltip": "Click to develop in VSCode",
-  "yaml_file": "YAML",
-  "invalid_date_format": "Invalid date format",
-  "invalid_time_format": "Invalid time format",
-  "end_time_cannot_be_future": "End time cannot be later than current time"
+  "yaml_file": "YAML"
 }

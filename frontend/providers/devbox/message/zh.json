@@ -149,6 +149,7 @@
   "edit_template": "编辑模板",
   "edit_version_description": "编辑版本描述",
   "enabled": "启用",
+  "end_time_cannot_be_future": "结束时间不能超过当前时间",
   "enter_devbox_name": "请输入项目名称",
   "enter_version_description": "简要描述此版本的目的和特点",
   "enter_version_number": "请输入版本号,例如：v1.0.0",
@@ -187,6 +188,8 @@
   "internal_address": "内网地址",
   "internal_debug_address": "内网调试地址",
   "intranet_address": "内网地址",
+  "invalid_date_format": "日期格式无效",
+  "invalid_time_format": "时间格式无效",
   "invalide_template_name": "输入的模板名称不符合规则",
   "invalide_template_version": "输入的版本号不符合规则",
   "jetbrains_guide_cancel": "点击取消",
@@ -268,6 +271,7 @@
   "open_link": "打开链接",
   "open_vscode": "VS Code",
   "opening_ide": "正在打开 IDE...",
+  "order": "排序",
   "os": "操作系统",
   "outstanding_tips": "您已欠费，无法创建项目，请尽快充值",
   "overview": "概览",
@@ -327,6 +331,7 @@
   "save_template": "保存",
   "saving": "节省",
   "scan_templates": "浏览模板",
+  "search_name_placeholder": "搜索名字",
   "search_or_add_version": "搜索或添加版本",
   "select": "选择",
   "select_at_least_1_tag": "请至少选择 1 个标签。",
@@ -342,6 +347,10 @@
   "setup_complete": "配置完成",
   "shutdown": "关机",
   "skip": "跳过",
+  "sort": {
+    "asc": "正序",
+    "desc": "倒序"
+  },
   "ssh_config": "SSH 配置",
   "ssh_connect_info": "连接串",
   "start": "开机",
@@ -402,8 +411,5 @@
   "vscode": "VS Code",
   "vscodeInsider": "VSCode Insider",
   "vscode_tooltip": "点击在 VSCode 中开发",
-  "yaml_file": "YAML 文件",
-  "invalid_date_format": "日期格式无效",
-  "invalid_time_format": "时间格式无效",
-  "end_time_cannot_be_future": "结束时间不能超过当前时间"
+  "yaml_file": "YAML 文件"
 }
