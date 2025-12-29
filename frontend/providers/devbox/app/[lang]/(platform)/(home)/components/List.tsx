@@ -555,7 +555,7 @@ const DevboxList = ({
 
   const { startDateTime, endDateTime } = useDateTimeStore();
 
-  const globalFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterValue) => {
+  const globalFilterFn: FilterFn<DevboxListItemTypeV2> = (row, _columnId, filterValue) => {
     const searchTerm = filterValue.toLowerCase();
     const name = row.original.name.toLowerCase();
     const remark = (row.original.remark || '').toLowerCase();
