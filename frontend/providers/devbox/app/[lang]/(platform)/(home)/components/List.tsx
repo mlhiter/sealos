@@ -315,7 +315,7 @@ const DevboxList = ({
           accessorKey: 'status',
           enableColumnFilter: true,
           filterFn: statusFilterFn,
-          header: ({ column, table }) => {
+          header: ({ table }: HeaderContext<DevboxListItemTypeV2, unknown>) => {
             const currentData = table.getCoreRowModel().rows.map((row) => row.original);
 
             const existingStatuses = new Set(
@@ -379,7 +379,7 @@ const DevboxList = ({
               </DropdownMenu>
             );
           },
-          cell: ({ row }) => {
+          cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
             const item = row.original;
             return (
               <StatusTag
@@ -431,9 +431,9 @@ const DevboxList = ({
         },
         {
           id: 'actions',
-          header: ({ column }) => <span className="select-none">{t('action')}</span>,
+          header: () => <span className="select-none">{t('action')}</span>,
           size: 300,
-          cell: ({ row }) => {
+          cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
             const item = row.original;
             return (
               <div className="flex items-center justify-start gap-2">
@@ -539,6 +539,7 @@ const DevboxList = ({
       }),
     [
       t,
+      router,
       statusFilter,
       setStatusFilter,
       isSpecificTimeRangeSelected,
