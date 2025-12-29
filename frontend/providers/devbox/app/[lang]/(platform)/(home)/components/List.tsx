@@ -34,7 +34,11 @@ import {
 import { useRouter } from '@/i18n';
 import { useDateTimeStore } from '@/stores/date';
 import { usePriceStore } from '@/stores/price';
-import { DevboxListItemTypeV2, DevboxStatusMapType } from '@/types/devbox';
+import {
+  DevboxListItemTypeV2,
+  DevboxStatusMapType,
+  DevboxStatusValueType
+} from '@/types/devbox';
 import { DevboxStatusEnum, devboxStatusMap } from '@/constants/devbox';
 import { useControlDevbox } from '@/hooks/useControlDevbox';
 
@@ -69,7 +73,9 @@ const PAGE_SIZE = 10;
 const statusFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterValue) => {
   if (!filterValue || filterValue.length === 0) return true;
   const status = row.getValue(columnId) as DevboxStatusMapType;
-  return filterValue.some((filter: string) => {
+  if (!status || !status.value) return false;
+
+  return filterValue.some((filter: DevboxStatusValueType) => {
     if (filter === DevboxStatusEnum.Stopped) {
       return (
         status.value === DevboxStatusEnum.Stopped || status.value === DevboxStatusEnum.Shutdown
@@ -124,7 +130,7 @@ const DevboxList = ({
     null
   );
   const [sorting, setSorting] = useState<SortingState>([{ id: 'createTime', desc: true }]);
-  const [statusFilter, setStatusFilter] = useState<DevboxStatusEnum[]>(() => {
+  const [statusFilter, setStatusFilter] = useState<DevboxStatusValueType[]>(() => {
     // Initialize with all available statuses except Shutdown
     return Object.values(devboxStatusMap)
       .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
