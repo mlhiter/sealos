@@ -397,11 +397,7 @@ export const generateYamlList = (
   return [
     {
       filename: 'devbox.yaml',
-<<<<<<< HEAD
-      value: json2Devbox(data, env.devboxAffinityEnable, env.storageLimit)
-=======
       value: json2DevboxV2(data, env.devboxAffinityEnable, env.squashEnable)
->>>>>>> parent of 53cd9e685 (feat(devbox): devbox backend v2.5 (#5942))
     },
     ...(data.networks.length > 0
       ? [

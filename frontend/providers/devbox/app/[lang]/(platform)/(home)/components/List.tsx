@@ -52,14 +52,13 @@ import ShutdownModal from '@/components/dialogs/ShutdownDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@sealos/shadcn-ui/tooltip';
 import { track } from '@sealos/gtm';
 import { Polygon } from '@/components/Polygon';
-import DatePicker from '@/components/DatePicker';
 import { Separator } from '@sealos/shadcn-ui/separator';
 import SearchEmpty from './SearchEmpty';
 import { Monitor as MonitorColumn } from './list/columns/Monitor';
 import { CreateTime as CreateTimeColumn } from './list/columns/CreateTime';
 import { CreateTimeFilter } from './list/headers/CreateTimeFilter';
 import GPUItem from '@/components/GPUItem';
-import DevboxStatusTag from '@/components/DevboxStatusTag';
+import StatusTag from '@/components/StatusTag';
 import IDEButton from '@/components/IDEButton';
 
 const DeleteDevboxDialog = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
@@ -153,85 +152,75 @@ const DevboxList = ({
   }, []);
 
   const columns = useMemo<ColumnDef<DevboxListItemTypeV2>[]>(
-    () => [
-      {
-        accessorKey: 'name',
-        header: ({ column }: HeaderContext<DevboxListItemTypeV2, unknown>) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex cursor-pointer items-center gap-2 select-none hover:text-zinc-800">
-                {column.getIsSorted() === 'desc' ? (
-                  <ArrowDownAZ className="h-4 w-4 shrink-0 text-blue-600" />
-                ) : (
-                  <ArrowUpAZ
-                    className={`h-4 w-4 shrink-0 ${column.getIsSorted() === 'asc' ? 'text-blue-600' : ''}`}
-                  />
-                )}
-                {t('name')}
-                <Polygon
-                  fillColor={column.getIsSorted() ? '#2563EB' : '#A1A1AA'}
-                  className="h-1.5 w-3 shrink-0"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
-                {t('order')}
-              </div>
-              <DropdownMenuItem
-                onClick={() => {
-                  if (column.getIsSorted() === 'asc') {
-                    column.clearSorting();
-                  } else {
-                    column.toggleSorting(false);
-                  }
-                }}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <ArrowUpAZ className="h-4 w-4 shrink-0" />
-                  {t('sort.asc')}
-                </div>
-                {column.getIsSorted() === 'asc' && <Check className="h-4 w-4 text-blue-600" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  if (column.getIsSorted() === 'desc') {
-                    column.clearSorting();
-                  } else {
-                    column.toggleSorting(true);
-                  }
-                }}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <ArrowDownAZ className="h-4 w-4 shrink-0" />
-                  {t('sort.desc')}
-                </div>
-                {column.getIsSorted() === 'desc' && <Check className="h-4 w-4 text-blue-600" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-        size: 250,
-        cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
-          const item = row.original;
-          return (
-            <div className="flex w-full cursor-pointer items-center gap-2 pr-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex h-8 min-w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
-                    <Image
-                      width={21}
-                      height={21}
-                      alt={item.id}
-                      src={`/images/runtime/${item.template.templateRepository.iconId}.svg`}
+    () =>
+      [
+        {
+          accessorKey: 'name',
+          header: ({ column }: HeaderContext<DevboxListItemTypeV2, unknown>) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex cursor-pointer items-center gap-2 select-none hover:text-zinc-800">
+                  {column.getIsSorted() === 'desc' ? (
+                    <ArrowDownAZ className="h-4 w-4 shrink-0 text-blue-600" />
+                  ) : (
+                    <ArrowUpAZ
+                      className={`h-4 w-4 shrink-0 ${column.getIsSorted() === 'asc' ? 'text-blue-600' : ''}`}
                     />
+                  )}
+                  {t('name')}
+                  <Polygon
+                    fillColor={column.getIsSorted() ? '#2563EB' : '#A1A1AA'}
+                    className="h-1.5 w-3 shrink-0"
+                  />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500">
+                  {t('order')}
+                </div>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (column.getIsSorted() === 'asc') {
+                      column.clearSorting();
+                    } else {
+                      column.toggleSorting(false);
+                    }
+                  }}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <ArrowUpAZ className="h-4 w-4 shrink-0" />
+                    {t('sort.asc')}
                   </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" sideOffset={1}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
+                  {column.getIsSorted() === 'asc' && <Check className="h-4 w-4 text-blue-600" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (column.getIsSorted() === 'desc') {
+                      column.clearSorting();
+                    } else {
+                      column.toggleSorting(true);
+                    }
+                  }}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <ArrowDownAZ className="h-4 w-4 shrink-0" />
+                    {t('sort.desc')}
+                  </div>
+                  {column.getIsSorted() === 'desc' && <Check className="h-4 w-4 text-blue-600" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ),
+          size: 250,
+          cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
+            const item = row.original;
+            return (
+              <div className="flex w-full cursor-pointer items-center gap-2 pr-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex h-8 min-w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
                       <Image
                         width={21}
                         height={21}
@@ -239,295 +228,315 @@ const DevboxList = ({
                         src={`/images/runtime/${item.template.templateRepository.iconId}.svg`}
                       />
                     </div>
-                    <div className="flex flex-col">
-                      <p className="text-sm/5 font-medium">
-                        {item.template.templateRepository.iconId}
-                      </p>
-                      <p className="text-xs/5 text-zinc-500">{item.template.name}</p>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start" sideOffset={1}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg border-[0.5px] border-zinc-200 bg-zinc-50">
+                        <Image
+                          width={21}
+                          height={21}
+                          alt={item.id}
+                          src={`/images/runtime/${item.template.templateRepository.iconId}.svg`}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-sm/5 font-medium">
+                          {item.template.templateRepository.iconId}
+                        </p>
+                        <p className="text-xs/5 text-zinc-500">{item.template.name}</p>
+                      </div>
                     </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex w-full flex-1 flex-col leading-none">
-                    <div className="group flex items-center gap-1">
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                        {item.name}
-                      </span>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex w-full flex-1 flex-col leading-none">
+                      <div className="group flex items-center gap-1">
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {item.name}
+                        </span>
 
-                      {!item.remark && (
-                        <div
-                          className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity select-none group-hover:opacity-100"
-                          onClick={() => {
-                            setOnOpenEditRemark(true);
-                            setEditRemarkItem(item);
-                          }}
-                        >
-                          <PencilLine className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500" />
-                          <span className="text-sm text-zinc-500">{t('set_remarks')}</span>
+                        {!item.remark && (
+                          <div
+                            className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity select-none group-hover:opacity-100"
+                            onClick={() => {
+                              setOnOpenEditRemark(true);
+                              setEditRemarkItem(item);
+                            }}
+                          >
+                            <PencilLine className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500" />
+                            <span className="text-sm text-zinc-500">{t('set_remarks')}</span>
+                          </div>
+                        )}
+                      </div>
+                      {item.remark && (
+                        <div className="group flex w-[80%] items-center gap-1">
+                          <span className="truncate text-xs font-normal text-zinc-500">
+                            {item.remark}
+                          </span>
+                          <PencilLine
+                            className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                              setOnOpenEditRemark(true);
+                              setEditRemarkItem(item);
+                            }}
+                          />
                         </div>
                       )}
                     </div>
-                    {item.remark && (
-                      <div className="group flex w-[80%] items-center gap-1">
-                        <span className="truncate text-xs font-normal text-zinc-500">
-                          {item.remark}
-                        </span>
-                        <PencilLine
-                          className="h-4 min-h-4 w-4 min-w-4 cursor-pointer text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100"
-                          onClick={() => {
-                            setOnOpenEditRemark(true);
-                            setEditRemarkItem(item);
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  align="start"
-                  className="mr-25 flex w-fit max-w-60 flex-col gap-2 p-4 text-sm/5"
-                >
-                  <div>
-                    <div className="flex w-full gap-2">
-                      <span className="min-w-15 text-zinc-600">{t('name')}</span>
-                      <span className="break-all text-zinc-900">{item.name}</span>
-                    </div>
-                    {!!item.remark && (
-                      <>
-                        <Separator className="bg-zinc-100" />
-                        <div className="flex w-full gap-2">
-                          <span className="min-w-15 text-zinc-600">{t('remark')}</span>
-                          <div className="break-all text-zinc-900">{item.remark}</div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          );
-        }
-      },
-      {
-        accessorKey: 'status',
-        enableColumnFilter: true,
-        filterFn: statusFilterFn,
-        header: ({ column, table }) => {
-          const currentData = table.getCoreRowModel().rows.map((row) => row.original);
-
-          const existingStatuses = new Set(
-            currentData.map((item) =>
-              item.status.value === DevboxStatusEnum.Shutdown
-                ? DevboxStatusEnum.Stopped
-                : item.status.value
-            )
-          );
-
-          const statusOptions = Object.values(devboxStatusMap).filter((status) => {
-            if (status.value === DevboxStatusEnum.Shutdown) return false;
-            if (status.value === DevboxStatusEnum.Stopped) {
-              return existingStatuses.has(DevboxStatusEnum.Stopped);
-            }
-            return existingStatuses.has(status.value);
-          }) as DevboxStatusMapType[];
-
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
-                  {t('status')}
-                  <Polygon
-                    fillColor={
-                      Object.values(devboxStatusMap)
-                        .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
-                        .map((status) => status.value)
-                        .every((value) => statusFilter.includes(value))
-                        ? '#A1A1AA'
-                        : '#2563EB'
-                    }
-                    className="h-1.5 w-3 shrink-0"
-                  />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500 select-none">
-                  {t('status')}
-                </div>
-                {statusOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    className="flex w-full cursor-pointer items-center justify-between px-2 py-1.5"
-                    onClick={() => {
-                      const isSelected = statusFilter.includes(option.value);
-                      setStatusFilter(
-                        isSelected
-                          ? statusFilter.filter((value) => value !== option.value)
-                          : [...statusFilter, option.value]
-                      );
-                    }}
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    align="start"
+                    className="mr-25 flex w-fit max-w-60 flex-col gap-2 p-4 text-sm/5"
                   >
-                    <DevboxStatusTag status={option} className="font-normal" />
-                    {statusFilter.includes(option.value) && (
-                      <Check className="h-4 w-4 text-blue-600" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
+                    <div>
+                      <div className="flex w-full gap-2">
+                        <span className="min-w-15 text-zinc-600">{t('name')}</span>
+                        <span className="break-all text-zinc-900">{item.name}</span>
+                      </div>
+                      {!!item.remark && (
+                        <>
+                          <Separator className="bg-zinc-100" />
+                          <div className="flex w-full gap-2">
+                            <span className="min-w-15 text-zinc-600">{t('remark')}</span>
+                            <div className="break-all text-zinc-900">{item.remark}</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          }
         },
-        cell: ({ row }) => {
-          const item = row.original;
-          return (
-            <DevboxStatusTag
-              status={item.status}
-              isShutdown={item.status.value === DevboxStatusEnum.Shutdown}
-            />
-          );
-        }
-      },
-      {
-        accessorKey: 'cpu',
-        header: () => <span className="select-none">{t('cpu')}</span>,
-        size: 200,
-        cell: (props: CellContext<DevboxListItemTypeV2, unknown>) => <MonitorColumn {...props} type="cpu" />
-      },
-      {
-        accessorKey: 'memory',
-        header: () => <span className="select-none">{t('memory')}</span>,
-        size: 200,
-        cell: (props: CellContext<DevboxListItemTypeV2, unknown>) => <MonitorColumn {...props} type="memory" />
-      },
-      {
-        accessorKey: 'gpu',
-        header: ({ column }: HeaderContext<DevboxListItemTypeV2, unknown>) => <span className="select-none">GPU</span>,
-        size: 150,
-        cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
-          const item = row.original;
-          return <GPUItem gpu={item.gpu} />;
-        }
-      },
-      {
-        accessorKey: 'createTime',
-        enableColumnFilter: true,
-        filterFn: dateFilterFn,
-        header: (props: HeaderContext<DevboxListItemTypeV2, unknown>) => (
-          <CreateTimeFilter {...props} isSpecificTimeRangeSelected={isSpecificTimeRangeSelected} />
-        ),
-        size: 150,
-        cell: CreateTimeColumn
-      },
-      {
-        id: 'actions',
-        header: ({ column }) => <span className="select-none">{t('action')}</span>,
-        size: 300,
-        cell: ({ row }) => {
-          const item = row.original;
-          return (
-            <div className="flex items-center justify-start gap-2">
-              <IDEButton
-                devboxName={item.name}
-                sshPort={item.sshPort}
-                status={item.status}
-                runtimeType={item.template.templateRepository.iconId as string}
-                leftButtonProps={{
-                  className: 'border-r-1 w-36 rounded-r-none px-2'
-                }}
-              />
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  router.push(`/devbox/detail/${item.name}`);
-                  track({
-                    event: 'deployment_details',
-                    module: 'devbox',
-                    context: 'app'
-                  });
-                }}
-              >
-                {t('detail')}
-              </Button>
+        {
+          accessorKey: 'status',
+          enableColumnFilter: true,
+          filterFn: statusFilterFn,
+          header: ({ column, table }) => {
+            const currentData = table.getCoreRowModel().rows.map((row) => row.original);
+
+            const existingStatuses = new Set(
+              currentData.map((item) =>
+                item.status.value === DevboxStatusEnum.Shutdown
+                  ? DevboxStatusEnum.Stopped
+                  : item.status.value
+              )
+            );
+
+            const statusOptions = Object.values(devboxStatusMap).filter((status) => {
+              if (status.value === DevboxStatusEnum.Shutdown) return false;
+              if (status.value === DevboxStatusEnum.Stopped) {
+                return existingStatuses.has(DevboxStatusEnum.Stopped);
+              }
+              return existingStatuses.has(status.value);
+            }) as DevboxStatusMapType[];
+
+            return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Ellipsis className="h-4 w-4 text-zinc-500" />
-                  </Button>
+                  <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
+                    {t('status')}
+                    <Polygon
+                      fillColor={
+                        Object.values(devboxStatusMap)
+                          .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
+                          .map((status) => status.value)
+                          .every((value) => statusFilter.includes(value))
+                          ? '#A1A1AA'
+                          : '#2563EB'
+                      }
+                      className="h-1.5 w-3 shrink-0"
+                    />
+                  </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem className="h-9" onClick={() => handleOpenRelease(item)}>
-                    <ArrowBigUpDash className="h-4 w-4 text-neutral-500" />
-                    {t('release')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="h-9"
-                    disabled={item.status.value !== 'Running'}
-                    onClick={() => handleGoToTerminal(item)}
-                  >
-                    <SquareTerminal className="h-4 w-4 text-neutral-500" />
-                    {t('terminal')}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
-                    onClick={() => router.push(`/devbox/create?name=${item.name}&from=list`)}
-                  >
-                    <PencilLine className="h-4 w-4 text-neutral-500" />
-                    {t('update')}
-                  </DropdownMenuItem>
-                  {(item.status.value === 'Stopped' || item.status.value === 'Shutdown') && (
+                <DropdownMenuContent align="start" className="w-48">
+                  <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500 select-none">
+                    {t('status')}
+                  </div>
+                  {statusOptions.map((option) => (
                     <DropdownMenuItem
-                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
-                      onClick={() => handleStartDevbox(item)}
-                    >
-                      <Play className="h-4 w-4 text-neutral-500" />
-                      {t('start')}
-                    </DropdownMenuItem>
-                  )}
-                  {item.status.value !== 'Stopped' && item.status.value !== 'Shutdown' && (
-                    <DropdownMenuItem
-                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
-                      onClick={() => handleRestartDevbox(item)}
-                    >
-                      <IterationCw className="h-4 w-4 text-neutral-500" />
-                      {t('restart')}
-                    </DropdownMenuItem>
-                  )}
-                  {item.status.value === 'Running' && (
-                    <DropdownMenuItem
-                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      key={option.value}
+                      className="flex w-full cursor-pointer items-center justify-between px-2 py-1.5"
                       onClick={() => {
-                        setOnOpenShutdown(true);
-                        setCurrentDevboxListItem(item);
+                        const isSelected = statusFilter.includes(option.value);
+                        setStatusFilter(
+                          isSelected
+                            ? statusFilter.filter((value) => value !== option.value)
+                            : [...statusFilter, option.value]
+                        );
                       }}
                     >
-                      <Pause className="h-4 w-4 text-neutral-500" />
-                      {t('shutdown')}
+                      <StatusTag status={option} className="font-normal" />
+                      {statusFilter.includes(option.value) && (
+                        <Check className="h-4 w-4 text-blue-600" />
+                      )}
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    variant="destructive"
-                    className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
-                    onClick={() => setDelDevbox(item)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {t('delete')}
-                  </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          );
+            );
+          },
+          cell: ({ row }) => {
+            const item = row.original;
+            return (
+              <StatusTag
+                status={item.status}
+                isShutdown={item.status.value === DevboxStatusEnum.Shutdown}
+              />
+            );
+          }
+        },
+        {
+          accessorKey: 'cpu',
+          header: () => <span className="select-none">{t('cpu')}</span>,
+          size: 200,
+          cell: (props: CellContext<DevboxListItemTypeV2, unknown>) => (
+            <MonitorColumn {...props} type="cpu" />
+          )
+        },
+        {
+          accessorKey: 'memory',
+          header: () => <span className="select-none">{t('memory')}</span>,
+          size: 200,
+          cell: (props: CellContext<DevboxListItemTypeV2, unknown>) => (
+            <MonitorColumn {...props} type="memory" />
+          )
+        },
+        {
+          accessorKey: 'gpu',
+          header: ({ column }: HeaderContext<DevboxListItemTypeV2, unknown>) => (
+            <span className="select-none">GPU</span>
+          ),
+          size: 150,
+          cell: ({ row }: CellContext<DevboxListItemTypeV2, unknown>) => {
+            const item = row.original;
+            return <GPUItem gpu={item.gpu} />;
+          }
+        },
+        {
+          accessorKey: 'createTime',
+          enableColumnFilter: true,
+          filterFn: dateFilterFn,
+          header: (props: HeaderContext<DevboxListItemTypeV2, unknown>) => (
+            <CreateTimeFilter
+              {...props}
+              isSpecificTimeRangeSelected={isSpecificTimeRangeSelected}
+            />
+          ),
+          size: 150,
+          cell: CreateTimeColumn
+        },
+        {
+          id: 'actions',
+          header: ({ column }) => <span className="select-none">{t('action')}</span>,
+          size: 300,
+          cell: ({ row }) => {
+            const item = row.original;
+            return (
+              <div className="flex items-center justify-start gap-2">
+                <IDEButton
+                  devboxName={item.name}
+                  sshPort={item.sshPort}
+                  status={item.status}
+                  runtimeType={item.template.templateRepository.iconId as string}
+                  leftButtonProps={{
+                    className: 'border-r-1 w-36 rounded-r-none px-2'
+                  }}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    router.push(`/devbox/detail/${item.name}`);
+                    track({
+                      event: 'deployment_details',
+                      module: 'devbox',
+                      context: 'app'
+                    });
+                  }}
+                >
+                  {t('detail')}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Ellipsis className="h-4 w-4 text-zinc-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem className="h-9" onClick={() => handleOpenRelease(item)}>
+                      <ArrowBigUpDash className="h-4 w-4 text-neutral-500" />
+                      {t('release')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="h-9"
+                      disabled={item.status.value !== 'Running'}
+                      onClick={() => handleGoToTerminal(item)}
+                    >
+                      <SquareTerminal className="h-4 w-4 text-neutral-500" />
+                      {t('terminal')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      onClick={() => router.push(`/devbox/create?name=${item.name}&from=list`)}
+                    >
+                      <PencilLine className="h-4 w-4 text-neutral-500" />
+                      {t('update')}
+                    </DropdownMenuItem>
+                    {(item.status.value === 'Stopped' || item.status.value === 'Shutdown') && (
+                      <DropdownMenuItem
+                        className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                        onClick={() => handleStartDevbox(item)}
+                      >
+                        <Play className="h-4 w-4 text-neutral-500" />
+                        {t('start')}
+                      </DropdownMenuItem>
+                    )}
+                    {item.status.value !== 'Stopped' && item.status.value !== 'Shutdown' && (
+                      <DropdownMenuItem
+                        className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                        onClick={() => handleRestartDevbox(item)}
+                      >
+                        <IterationCw className="h-4 w-4 text-neutral-500" />
+                        {t('restart')}
+                      </DropdownMenuItem>
+                    )}
+                    {item.status.value === 'Running' && (
+                      <DropdownMenuItem
+                        className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                        onClick={() => {
+                          setOnOpenShutdown(true);
+                          setCurrentDevboxListItem(item);
+                        }}
+                      >
+                        <Pause className="h-4 w-4 text-neutral-500" />
+                        {t('shutdown')}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      onClick={() => setDelDevbox(item)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {t('delete')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            );
+          }
         }
-      }
-    ].filter((column) => {
-      if (column.accessorKey === 'gpu' && !sourcePrice.gpu) {
-        return false;
-      }
-      return true;
-    }),
+      ].filter((column) => {
+        if (column.accessorKey === 'gpu' && !sourcePrice.gpu) {
+          return false;
+        }
+        return true;
+      }),
     [
       t,
       statusFilter,
