@@ -56,8 +56,7 @@ export enum DevboxStatusEnum {
   Pending = 'Pending',
   Error = 'Error',
   Delete = 'Delete',
-  Unknown = 'Unknown',
-  Shutting = 'Shutting'
+  Unknown = 'Unknown'
 }
 export enum DevboxReleaseStatusEnum {
   Success = 'Success',
@@ -120,20 +119,12 @@ export const devboxStatusMap = {
     backgroundColor: '#F5F5F8',
     dotColor: '#787A90'
   },
-  [DevboxStatusEnum.Shutting]: {
-    label: 'Shutting',
-    value: DevboxStatusEnum.Shutting,
-    color: '#787A90',
-    backgroundColor: '#F5F5F8',
-    dotColor: '#787A90'
-  },
   [DevboxStatusEnum.Error]: {
-    // NOTE: there is to solve restart will show error,so we change it to pending
-    label: 'Pending',
-    value: DevboxStatusEnum.Pending,
-    color: '#787A90',
-    backgroundColor: '#F5F5F8',
-    dotColor: '#787A90'
+    label: 'Error',
+    value: DevboxStatusEnum.Error,
+    color: '#F04438',
+    backgroundColor: '#FEF3F2',
+    dotColor: '#F04438'
   },
   [DevboxStatusEnum.Delete]: {
     label: 'Delete',

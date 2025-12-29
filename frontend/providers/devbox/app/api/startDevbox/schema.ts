@@ -5,9 +5,6 @@ import { z } from 'zod';
 export const RequestSchema = z.object({
   devboxName: z.string().min(1).openapi({
     description: 'Devbox name to start'
-  }),
-  onlyIngress: z.boolean().optional().default(false).openapi({
-    description: 'Only modify ingress without changing devbox state'
   })
 });
 

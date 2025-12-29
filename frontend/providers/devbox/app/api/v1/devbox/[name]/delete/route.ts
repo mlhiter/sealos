@@ -37,7 +37,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { name: str
 
     await k8sCustomObjects.deleteNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxes',
       devboxName

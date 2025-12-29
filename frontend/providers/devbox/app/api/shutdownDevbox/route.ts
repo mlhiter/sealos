@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const { devboxName, shutdownMode, onlyIngress } = validationResult.data;
+    const { devboxName, shutdownMode } = validationResult.data;
     const headerList = req.headers;
 
     const { k8sCustomObjects, namespace, k8sNetworkingApp } = await getK8s({
@@ -84,27 +84,25 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    if (!onlyIngress) {
-      await k8sCustomObjects.patchNamespacedCustomObject(
-        'devbox.sealos.io',
-        'v1alpha2',
-        namespace,
-        'devboxes',
-        devboxName,
-        { spec: { state: shutdownMode } },
-        undefined,
-        undefined,
-        undefined,
-        {
-          headers: {
-            'Content-Type': 'application/merge-patch+json'
-          }
+    await k8sCustomObjects.patchNamespacedCustomObject(
+      'devbox.sealos.io',
+      'v1alpha1',
+      namespace,
+      'devboxes',
+      devboxName,
+      { spec: { state: shutdownMode } },
+      undefined,
+      undefined,
+      undefined,
+      {
+        headers: {
+          'Content-Type': 'application/merge-patch+json'
         }
-      );
-    }
+      }
+    );
 
     return jsonRes({
-      data: onlyIngress ? 'success pause ingress' : 'success shutdown devbox'
+      data: 'success shutdown devbox'
     });
   } catch (err: any) {
     return jsonRes({

@@ -25,6 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
       kubeconfig: await authSession(headerList)
     });
 
+
     const ingressesResponse = await k8sNetworkingApp.listNamespacedIngress(
       namespace,
       undefined,
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
       `${devboxKey}=${devboxName}`
     );
     const ingresses: any = (ingressesResponse.body as { items: any[] }).items;
+
 
     ingresses.forEach(async (ingress: any) => {
       const annotationsIngressClass =
@@ -80,9 +82,10 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
       }
     });
 
+
     await k8sCustomObjects.patchNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxes',
       devboxName,

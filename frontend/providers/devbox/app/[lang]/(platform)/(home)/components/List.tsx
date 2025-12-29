@@ -17,7 +17,19 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState, memo } from 'react';
-import { ArrowDownAZ, ArrowUpAZ, Check, PencilLine } from 'lucide-react';
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  Check,
+  PencilLine,
+  Ellipsis,
+  ArrowBigUpDash,
+  SquareTerminal,
+  Play,
+  IterationCw,
+  Pause,
+  Trash2
+} from 'lucide-react';
 
 import { useRouter } from '@/i18n';
 import { useDateTimeStore } from '@/stores/date';
@@ -27,10 +39,12 @@ import { DevboxStatusEnum, devboxStatusMap } from '@/constants/devbox';
 import { useControlDevbox } from '@/hooks/useControlDevbox';
 
 import { Pagination } from '@sealos/shadcn-ui/pagination';
+import { Button } from '@sealos/shadcn-ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@sealos/shadcn-ui/dropdown-menu';
 import ReleaseModal from '@/components/dialogs/ReleaseDialog';
@@ -41,13 +55,12 @@ import { Polygon } from '@/components/Polygon';
 import DatePicker from '@/components/DatePicker';
 import { Separator } from '@sealos/shadcn-ui/separator';
 import SearchEmpty from './SearchEmpty';
-import { Status as StatusColumn } from './list/columns/Status';
 import { Monitor as MonitorColumn } from './list/columns/Monitor';
 import { CreateTime as CreateTimeColumn } from './list/columns/CreateTime';
-import { Actions as ActionsColumn } from './list/columns/Actions';
-import { StatusFilter } from './list/headers/StatusFilter';
 import { CreateTimeFilter } from './list/headers/CreateTimeFilter';
 import GPUItem from '@/components/GPUItem';
+import DevboxStatusTag from '@/components/DevboxStatusTag';
+import IDEButton from '@/components/IDEButton';
 
 const DeleteDevboxDialog = dynamic(() => import('@/components/dialogs/DeleteDevboxDialog'));
 const EditRemarkDialog = dynamic(() => import('@/components/dialogs/EditRemarkDialog'));
@@ -57,8 +70,6 @@ const PAGE_SIZE = 10;
 const statusFilterFn: FilterFn<DevboxListItemTypeV2> = (row, columnId, filterValue) => {
   if (!filterValue || filterValue.length === 0) return true;
   const status = row.getValue(columnId) as DevboxStatusMapType;
-  if (!status || !status.value) return false;
-
   return filterValue.some((filter: string) => {
     if (filter === DevboxStatusEnum.Stopped) {
       return (
@@ -304,15 +315,79 @@ const DevboxList = ({
         accessorKey: 'status',
         enableColumnFilter: true,
         filterFn: statusFilterFn,
-        size: 120,
-        header: (props: HeaderContext<DevboxListItemTypeV2, unknown>) => (
-          <StatusFilter
-            {...props}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-          />
-        ),
-        cell: StatusColumn
+        header: ({ column, table }) => {
+          const currentData = table.getCoreRowModel().rows.map((row) => row.original);
+
+          const existingStatuses = new Set(
+            currentData.map((item) =>
+              item.status.value === DevboxStatusEnum.Shutdown
+                ? DevboxStatusEnum.Stopped
+                : item.status.value
+            )
+          );
+
+          const statusOptions = Object.values(devboxStatusMap).filter((status) => {
+            if (status.value === DevboxStatusEnum.Shutdown) return false;
+            if (status.value === DevboxStatusEnum.Stopped) {
+              return existingStatuses.has(DevboxStatusEnum.Stopped);
+            }
+            return existingStatuses.has(status.value);
+          }) as DevboxStatusMapType[];
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex cursor-pointer items-center gap-2 hover:text-zinc-800">
+                  {t('status')}
+                  <Polygon
+                    fillColor={
+                      Object.values(devboxStatusMap)
+                        .filter((status) => status.value !== DevboxStatusEnum.Shutdown)
+                        .map((status) => status.value)
+                        .every((value) => statusFilter.includes(value))
+                        ? '#A1A1AA'
+                        : '#2563EB'
+                    }
+                    className="h-1.5 w-3 shrink-0"
+                  />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <div className="flex items-center px-1 py-1.5 text-xs font-medium text-zinc-500 select-none">
+                  {t('status')}
+                </div>
+                {statusOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    className="flex w-full cursor-pointer items-center justify-between px-2 py-1.5"
+                    onClick={() => {
+                      const isSelected = statusFilter.includes(option.value);
+                      setStatusFilter(
+                        isSelected
+                          ? statusFilter.filter((value) => value !== option.value)
+                          : [...statusFilter, option.value]
+                      );
+                    }}
+                  >
+                    <DevboxStatusTag status={option} className="font-normal" />
+                    {statusFilter.includes(option.value) && (
+                      <Check className="h-4 w-4 text-blue-600" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <DevboxStatusTag
+              status={item.status}
+              isShutdown={item.status.value === DevboxStatusEnum.Shutdown}
+            />
+          );
+        }
       },
       {
         accessorKey: 'cpu',
@@ -347,19 +422,105 @@ const DevboxList = ({
       },
       {
         id: 'actions',
-        header: () => <span className="select-none">{t('action')}</span>,
-        size: 280,
-        cell: (props: CellContext<DevboxListItemTypeV2, unknown>) => (
-          <ActionsColumn
-            {...props}
-            onOpenRelease={handleOpenRelease}
-            onGoToTerminal={handleGoToTerminal}
-            onStartDevbox={handleStartDevbox}
-            onRestartDevbox={handleRestartDevbox}
-            onOpenShutdown={handleOpenShutdownModal}
-            onDeleteDevbox={handleDeleteDevbox}
-          />
-        )
+        header: ({ column }) => <span className="select-none">{t('action')}</span>,
+        size: 300,
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <div className="flex items-center justify-start gap-2">
+              <IDEButton
+                devboxName={item.name}
+                sshPort={item.sshPort}
+                status={item.status}
+                runtimeType={item.template.templateRepository.iconId as string}
+                leftButtonProps={{
+                  className: 'border-r-1 w-36 rounded-r-none px-2'
+                }}
+              />
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  router.push(`/devbox/detail/${item.name}`);
+                  track({
+                    event: 'deployment_details',
+                    module: 'devbox',
+                    context: 'app'
+                  });
+                }}
+              >
+                {t('detail')}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Ellipsis className="h-4 w-4 text-zinc-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem className="h-9" onClick={() => handleOpenRelease(item)}>
+                    <ArrowBigUpDash className="h-4 w-4 text-neutral-500" />
+                    {t('release')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="h-9"
+                    disabled={item.status.value !== 'Running'}
+                    onClick={() => handleGoToTerminal(item)}
+                  >
+                    <SquareTerminal className="h-4 w-4 text-neutral-500" />
+                    {t('terminal')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                    onClick={() => router.push(`/devbox/create?name=${item.name}&from=list`)}
+                  >
+                    <PencilLine className="h-4 w-4 text-neutral-500" />
+                    {t('update')}
+                  </DropdownMenuItem>
+                  {(item.status.value === 'Stopped' || item.status.value === 'Shutdown') && (
+                    <DropdownMenuItem
+                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      onClick={() => handleStartDevbox(item)}
+                    >
+                      <Play className="h-4 w-4 text-neutral-500" />
+                      {t('start')}
+                    </DropdownMenuItem>
+                  )}
+                  {item.status.value !== 'Stopped' && item.status.value !== 'Shutdown' && (
+                    <DropdownMenuItem
+                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      onClick={() => handleRestartDevbox(item)}
+                    >
+                      <IterationCw className="h-4 w-4 text-neutral-500" />
+                      {t('restart')}
+                    </DropdownMenuItem>
+                  )}
+                  {item.status.value === 'Running' && (
+                    <DropdownMenuItem
+                      className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                      onClick={() => {
+                        setOnOpenShutdown(true);
+                        setCurrentDevboxListItem(item);
+                      }}
+                    >
+                      <Pause className="h-4 w-4 text-neutral-500" />
+                      {t('shutdown')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    className="flex h-9 cursor-pointer items-center rounded-md px-3 text-sm"
+                    onClick={() => setDelDevbox(item)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t('delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        }
       }
     ].filter((column) => {
       if (column.accessorKey === 'gpu' && !sourcePrice.gpu) {

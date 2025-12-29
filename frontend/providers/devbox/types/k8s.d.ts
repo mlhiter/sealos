@@ -9,7 +9,7 @@ import {
 
 // TODO: delete v2 string
 export type KBDevboxTypeV2 = {
-  apiVersion: 'devbox.sealos.io/v1alpha2';
+  apiVersion: 'devbox.sealos.io/v1alpha1';
   kind: 'Devbox';
   metadata: {
     name: string;
@@ -20,36 +20,38 @@ export type KBDevboxTypeV2 = {
     };
   };
   spec: KBDevboxSpecV2;
-  status: {
-    // lastState: {
-    //   terminated?: {
-    //     containerID: string;
-    //     exitCode: number;
-    //     finishedAt: string;
-    //     reason: string; // normally is Error if it not null
-    //     startedAt: string;
-    //   };
-    // };
-    state: 'Pending' | 'Running' | 'Stopped' | 'Stopping' | 'Error' | 'Unknown' | 'Shutdown';
-    phase: 'Pending' | 'Running' | 'Stopped' | 'Stopping' | 'Error' | 'Unknown' | 'Shutdown';
-    contentID: string; // first item sha of commitRecords
-    commitRecords: {
-      [contentID: string]: {
-        baseImage: string;
-        commitImage: string;
-        commitStatus:
-          | 'Pending'
-          | 'Running'
-          | 'Stopped'
-          | 'Stopping'
-          | 'Error'
-          | 'Unknown'
-          | 'Shutdown';
-        commitTime?: string;
-        generateTime: string;
-        node: string;
-        updateTime?: string;
+  status?: {
+    lastState: {
+      terminated?: {
+        containerID: string;
+        exitCode: number;
+        finishedAt: string;
+        reason: string; // normally is Error if it not null
+        startedAt: string;
       };
+    };
+    state: {
+      running?: {
+        startedAt: string;
+      };
+      waiting?: {
+        message: string;
+        reason: string;
+      };
+      terminated?: {
+        containerID: string;
+        exitCode: number;
+        finishedAt: string;
+        reason: string;
+        startedAt: string;
+      };
+    };
+    phase: 'Pending' | 'Running' | 'Stopped' | 'Stopping' | 'Error' | 'Unknown' | 'Shutdown';
+    commitHistory: {
+      image: string;
+      pod: string;
+      status: string;
+      time: string;
     }[];
     network: {
       nodePort: number;
@@ -59,9 +61,62 @@ export type KBDevboxTypeV2 = {
     podPhase: 'Pending' | 'Running' | 'Stopped' | 'Stopping' | 'Error' | 'Delete';
   };
 };
+// note: runtimeType is I added by logic in api/getDevboxList/route.ts
+export interface KBDevboxSpec {
+  runtimeType?: string;
+
+  squash?: boolean;
+  network: {
+    type: 'NodePort' | 'Tailnet';
+    extraPorts: {
+      // NOTE: this object is deprecated, will be removed in the future
+      containerPort: number;
+      hostPort?: number;
+      protocol?: string;
+      name?: string;
+    }[];
+    // next all is added by logic in api/getDevboxList/route.ts
+    networkName?: string;
+    port?: string;
+    portName?: string;
+    protocol?: string;
+    openPublicDomain?: boolean;
+    publicDomain?: string;
+    customDomain?: string;
+  };
+  resource: {
+    cpu: string;
+    memory: string;
+    [gpuResourceKey]?: string;
+  };
+  runtimeRef: {
+    name: string;
+    namespace: string;
+  };
+  nodeSelector?: {
+    [gpuNodeSelectorKey]: string;
+  };
+  state: DevboxStatusEnum;
+  tolerations?: {
+    key: string;
+    operator: string;
+    effect: string;
+  }[];
+  affinity?: {
+    nodeAffinity: {
+      requiredDuringSchedulingIgnoredDuringExecution: {
+        nodeSelectorTerms: {
+          matchExpressions: {
+            key: string;
+            operator: string;
+          }[];
+        }[];
+      };
+    };
+  };
+}
 export interface KBDevboxSpecV2 {
-  runtimeClassName?: string; // devbox-runtime
-  storageLimit?: string; // 10Gi
+  squash?: boolean;
   config: object;
   image: string;
   templateID: string;
@@ -110,7 +165,7 @@ export interface KBDevboxSpecV2 {
   };
 }
 export type KBDevboxReleaseType = {
-  apiVersion: 'devbox.sealos.io/v1alpha2';
+  apiVersion: 'devbox.sealos.io/v1alpha1';
   kind: 'DevboxRelease';
   metadata: {
     name: string;
@@ -126,18 +181,17 @@ export type KBDevboxReleaseType = {
   };
   spec: {
     devboxName: string;
-    version: string;
+    newTag: string;
     notes?: string;
-    startDevboxAfterRelease: boolean;
   };
   status: {
-    sourceImage?: string;
+    originalImage?: string;
     phase: 'Pending' | 'Success' | 'Failed';
   };
 };
 
 export type KBRuntimeType = {
-  apiVersion: 'devbox.sealos.io/v1alpha2';
+  apiVersion: 'devbox.sealos.io/v1alpha1';
   kind: 'Runtime';
   metadata: {
     name: string; // go-v1-22-5 name+version
@@ -184,7 +238,7 @@ export type KBRuntimeType = {
 };
 
 export type KBRuntimeClassType = {
-  apiVersion: 'devbox.sealos.io/v1alpha2';
+  apiVersion: 'devbox.sealos.io/v1alpha1';
   kind: 'RuntimeClass';
   metadata: {
     name: string;

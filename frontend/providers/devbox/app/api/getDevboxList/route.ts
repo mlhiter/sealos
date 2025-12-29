@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const devboxResponse = await k8sCustomObjects.listNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxes'
     );

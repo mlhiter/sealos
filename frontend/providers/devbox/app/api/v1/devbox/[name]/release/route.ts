@@ -15,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
     const devboxName = params.name;
     const headerList = req.headers;
 
+
     const devboxNamePattern = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/;
     if (!devboxNamePattern.test(devboxName) || devboxName.length > 63) {
       return jsonRes({
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
 
     const { body: releaseBody } = (await k8sCustomObjects.listNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxreleases'
     )) as { body: { items: KBDevboxReleaseType[] } };
@@ -90,19 +91,21 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
 
     const { body: releaseBody } = (await k8sCustomObjects.listNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxreleases'
     )) as { body: { items: KBDevboxReleaseType[] } };
 
     const { body: devboxBody } = (await k8sCustomObjects.listNamespacedCustomObject(
       'devbox.sealos.io',
-      'v1alpha2',
+      'v1alpha1',
       namespace,
       'devboxes'
     )) as { body: { items: KBDevboxReleaseType[] } };
 
-    const devbox = devboxBody.items.find((item: any) => item.metadata.name === devboxName);
+    const devbox = devboxBody.items.find(
+      (item: any) => item.metadata.name === devboxName
+    );
 
     if (!devbox) {
       return jsonRes({
@@ -114,7 +117,9 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
     if (
       releaseBody.items.some((item: any) => {
         return (
-          item.spec && item.spec.devboxName === devboxName && item.spec.version === releaseForm.tag
+          item.spec &&
+          item.spec.devboxName === devboxName &&
+          item.spec.newTag === releaseForm.tag
         );
       })
     ) {
@@ -128,8 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: { name: strin
       devboxName,
       tag: releaseForm.tag,
       releaseDes: releaseForm.releaseDes,
-      devboxUid: devbox?.metadata.uid || '',
-      startDevboxAfterRelease: false
+      devboxUid: devbox?.metadata.uid || ''
     });
     await applyYamlList([devboxYaml], 'create');
 

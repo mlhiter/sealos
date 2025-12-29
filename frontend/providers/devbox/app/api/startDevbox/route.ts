@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const { devboxName, onlyIngress } = validationResult.data;
+    const { devboxName } = validationResult.data;
     const headerList = req.headers;
 
     const { k8sCustomObjects, namespace, k8sNetworkingApp } = await getK8s({
@@ -84,27 +84,25 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    if (!onlyIngress) {
-      await k8sCustomObjects.patchNamespacedCustomObject(
-        'devbox.sealos.io',
-        'v1alpha2',
-        namespace,
-        'devboxes',
-        devboxName,
-        { spec: { state: 'Running' } },
-        undefined,
-        undefined,
-        undefined,
-        {
-          headers: {
-            'Content-Type': 'application/merge-patch+json'
-          }
+    await k8sCustomObjects.patchNamespacedCustomObject(
+      'devbox.sealos.io',
+      'v1alpha1',
+      namespace,
+      'devboxes',
+      devboxName,
+      { spec: { state: 'Running' } },
+      undefined,
+      undefined,
+      undefined,
+      {
+        headers: {
+          'Content-Type': 'application/merge-patch+json'
         }
-      );
-    }
+      }
+    );
 
     return jsonRes({
-      data: onlyIngress ? 'success resume ingress' : 'success start devbox'
+      data: 'success start devbox'
     });
   } catch (err: any) {
     console.log('error', err);
