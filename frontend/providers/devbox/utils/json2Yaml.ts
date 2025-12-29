@@ -7,14 +7,10 @@ import { nanoid, parseTemplateConfig, str2Num } from './tools';
 import { getUserNamespace } from './user';
 
 export const json2Devbox = (
-  data: DevboxEditType,
-  runtimeNamespaceMap: RuntimeNamespaceMap,
+  data: Omit<json2DevboxV2Data, 'templateRepositoryUid'>,
   devboxAffinityEnable: string = 'true',
-  squashEnable: string = 'false'
+  storageLimit: string = '10Gi'
 ) => {
-  // runtimeNamespace inject
-  const runtimeNamespace = runtimeNamespaceMap[data.runtimeVersion];
-  // gpu node selector
   const gpuMap = !!data.gpu?.type
     ? {
         nodeSelector: {
@@ -22,6 +18,7 @@ export const json2Devbox = (
         }
       }
     : {};
+
   let json: any = {
     apiVersion: 'devbox.sealos.io/v1alpha1',
     kind: 'Devbox',
@@ -29,7 +26,7 @@ export const json2Devbox = (
       name: data.name
     },
     spec: {
-      squash: squashEnable === 'true',
+      squash: false,
       network: {
         type: 'NodePort',
         extraPorts: data.networks.map((item) => ({
@@ -42,12 +39,26 @@ export const json2Devbox = (
         ...(!!data.gpu?.type ? { [gpuResourceKey]: data.gpu.amount } : {})
       },
       ...(!!data.gpu?.type ? { runtimeClassName: 'nvidia' } : {}),
-      runtimeRef: {
-        name: data.runtimeVersion,
-        namespace: runtimeNamespace
-      },
+      templateID: data.templateUid,
+      image: data.image,
+      config: produce(parseTemplateConfig(data.templateConfig), (draft) => {
+        draft.appPorts = data.networks.map((item) => ({
+          port: str2Num(item.port),
+          name: item.portName,
+          protocol: 'TCP',
+          targetPort: str2Num(item.port)
+        }));
+        if (data.env && data.env.length > 0) {
+          if (!draft.env) {
+            draft.env = [];
+          }
+          draft.env = [...draft.env, ...data.env];
+        }
+      }),
       state: 'Running',
-      ...gpuMap
+      ...gpuMap,
+      runtimeClassName: 'devbox-runtime',
+      storageLimit: storageLimit
     }
   };
   if (devboxAffinityEnable === 'true') {
