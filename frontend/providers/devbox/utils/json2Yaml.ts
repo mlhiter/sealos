@@ -7,7 +7,7 @@ import { nanoid, parseTemplateConfig, str2Num } from './tools';
 import { getUserNamespace } from './user';
 
 export const json2Devbox = (
-  data: Omit<json2DevboxV2Data, 'templateRepositoryUid'>,
+  data: Omit<json2DevboxData, 'templateRepositoryUid'>,
   devboxAffinityEnable: string = 'true',
   storageLimit: string = '10Gi'
 ) => {
@@ -89,7 +89,7 @@ export const json2Devbox = (
   return yaml.dump(json);
 };
 export const json2DevboxV2 = (
-  data: Omit<json2DevboxV2Data, 'templateRepositoryUid'>,
+  data: Omit<json2DevboxData, 'templateRepositoryUid'>,
   devboxAffinityEnable: string = 'true',
   squashEnable: string = 'false'
 ) => {
