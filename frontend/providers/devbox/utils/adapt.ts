@@ -42,8 +42,7 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
     template,
     remark: devbox.metadata?.annotations?.[devboxRemarkKey] || '',
     status: devboxStatusMap[devbox.status.phase], // use devbox.status.phase to get status
-    sshPort:
-      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
+    sshPort: devbox.status?.network.nodePort || 65535,
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
     memory: memoryFormatToMi(devbox.spec.resource.memory),
@@ -61,8 +60,7 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
       name: '',
       xData: new Array(30).fill(0),
       yData: new Array(30).fill('0')
-    },
-    networkType: devbox.spec.network.type
+    }
   };
 };
 
@@ -83,8 +81,7 @@ export const adaptDevboxDetailV2 = ([
     image: template.image,
     iconId: template.templateRepository.iconId || '',
     status: devboxStatusMap[devbox.status.phase], // use devbox.status.phase to get status
-    sshPort:
-      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
+    sshPort: devbox.status?.network.nodePort || 65535,
     isPause: devbox.status.phase === 'Stopped' || devbox.status.phase === 'Shutdown',
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
@@ -104,8 +101,7 @@ export const adaptDevboxDetailV2 = ([
       xData: new Array(30).fill(0),
       yData: new Array(30).fill('0')
     },
-    networks: portInfos || [],
-    networkType: devbox.spec.network.type
+    networks: portInfos || []
   };
 };
 export const adaptDevboxVersionListItem = (

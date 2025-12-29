@@ -74,7 +74,6 @@ export interface DevboxEditTypeV2 {
   memory: number;
   gpu?: GpuType;
   networks: PortInfos;
-  networkType?: 'NodePort' | 'Tailnet' | 'SSHGate';
   env?: DevboxEnvType[];
 }
 
@@ -172,7 +171,6 @@ export interface DevboxListItemTypeV2 {
   usedCpu: MonitorDataResult;
   usedMemory: MonitorDataResult;
   sshPort: number;
-  networkType?: 'NodePort' | 'Tailnet' | 'SSHGate';
   // lastTerminatedReason?: string;
 }
 export interface DevboxVersionListItemType {

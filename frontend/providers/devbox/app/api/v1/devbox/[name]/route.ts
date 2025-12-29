@@ -846,7 +846,6 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
 
     const sshPort = devboxBody.status?.network?.nodePort || 0;
     const base64PrivateKey = secret?.data?.['SEALOS_DEVBOX_PRIVATE_KEY'] as string | undefined;
-    const base64JwtSecret = secret?.data?.['SEALOS_DEVBOX_JWT_SECRET'] as string | undefined;
 
     const ssh = {
       host: SEALOS_DOMAIN || '',
@@ -854,11 +853,6 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
       user: config.user,
       workingDir: config.workingDir,
       ...(base64PrivateKey && { privateKey: base64PrivateKey })
-    };
-
-    const agentServer = {
-      url: devboxBody.status?.network?.uniqueID || '',
-      token: base64JwtSecret || ''
     };
 
     const resources = {
@@ -930,8 +924,7 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
       env,
       ports,
       pods: podsData,
-      operationalStatus: devboxBody.status,
-      agentServer
+      operationalStatus: devboxBody.status
     };
 
     return jsonRes({ data });

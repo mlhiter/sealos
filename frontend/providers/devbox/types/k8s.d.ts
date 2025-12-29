@@ -54,8 +54,7 @@ export type KBDevboxTypeV2 = {
     network: {
       nodePort: number;
       tailnet: string;
-      type: 'NodePort' | 'Tailnet' | 'SSHGate';
-      uniqueID?: string;
+      type: 'NodePort' | 'Tailnet';
     };
     podPhase: 'Pending' | 'Running' | 'Stopped' | 'Stopping' | 'Error' | 'Delete';
   };
@@ -67,7 +66,7 @@ export interface KBDevboxSpecV2 {
   image: string;
   templateID: string;
   network: {
-    type: 'NodePort' | 'Tailnet' | 'SSHGate'; // devbox 2.5 add SSHGate
+    type: 'NodePort' | 'Tailnet';
     extraPorts: {
       containerPort: number;
       hostPort?: number;
