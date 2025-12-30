@@ -49,30 +49,15 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
     memory: memoryFormatToMi(devbox.spec.resource.memory),
-    gpu: gpuType || gpuAmount ? {
-      type: gpuType || '',
-      amount: Number(gpuAmount || 0),
-      manufacturers: 'nvidia'
-    } : undefined,
-    usedCpu: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
-    },
-    usedMemory: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
-    },
-    lastTerminatedReason: devbox.status
-      ? devbox.status.lastState?.terminated && devbox.status.lastState.terminated.reason === 'Error'
-        ? devbox.status.state.waiting
-          ? devbox.status.state.waiting.reason
-          : devbox.status.state.terminated
-            ? devbox.status.state.terminated.reason
-            : ''
-        : ''
-      : ''
+    gpu:
+      gpuType || gpuAmount
+        ? {
+            type: gpuType || '',
+            amount: Number(gpuAmount || 0),
+            manufacturers: 'nvidia'
+          }
+        : undefined,
+    networkType: devbox.spec.network.type
   };
 };
 
@@ -106,16 +91,6 @@ export const adaptDevboxDetailV2 = ([
       type: devbox.spec.nodeSelector?.[gpuNodeSelectorKey] || '',
       amount: Number(devbox.spec.resource[gpuResourceKey] || 1),
       manufacturers: 'nvidia'
-    },
-    usedCpu: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
-    },
-    usedMemory: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
     },
     networks: portInfos || [],
     lastTerminatedReason: devbox.status
@@ -192,16 +167,6 @@ export const adaptPod = (pod: V1Pod): PodDetailType => {
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp),
-    usedCpu: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
-    },
-    usedMemory: {
-      name: '',
-      xData: new Array(30).fill(0),
-      yData: new Array(30).fill('0')
-    },
     cpu: cpuFormatToM(pod.spec?.containers?.[0]?.resources?.limits?.cpu || '0'),
     memory: memoryFormatToMi(pod.spec?.containers?.[0]?.resources?.limits?.memory || '0')
   };
