@@ -41,11 +41,9 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
     name: devbox.metadata.name || 'devbox',
     template,
     remark: devbox.metadata?.annotations?.[devboxRemarkKey] || '',
-    status:
-      devbox.status?.phase && devboxStatusMap[devbox.status.phase]
-        ? devboxStatusMap[devbox.status.phase]
-        : devboxStatusMap.Pending,
-    sshPort: devbox.status?.network.nodePort || 65535,
+    status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
+    sshPort:
+      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
     memory: memoryFormatToMi(devbox.spec.resource.memory),
@@ -66,10 +64,6 @@ export const adaptDevboxDetailV2 = ([
   portInfos,
   template
 ]: GetDevboxByNameReturn): DevboxDetailTypeV2 => {
-  const status =
-    devbox.status?.phase && devboxStatusMap[devbox.status.phase]
-      ? devboxStatusMap[devbox.status.phase]
-      : devboxStatusMap.Pending;
   return {
     id: devbox.metadata?.uid || ``,
     name: devbox.metadata.name || 'devbox',
@@ -81,9 +75,10 @@ export const adaptDevboxDetailV2 = ([
     templateConfig: JSON.stringify(devbox.spec.config),
     image: template.image,
     iconId: template.templateRepository.iconId || '',
-    status,
-    sshPort: devbox.status?.network.nodePort || 65535,
-    isPause: devbox.status?.phase === 'Stopped',
+    status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
+    sshPort:
+      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
+    isPause: devbox.status.phase === 'Stopped' || devbox.status.phase === 'Shutdown',
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
     memory: memoryFormatToMi(devbox.spec.resource.memory),
