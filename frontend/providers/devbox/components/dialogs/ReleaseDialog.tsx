@@ -7,7 +7,14 @@ import { cn } from '@sealos/shadcn-ui';
 import { useEnvStore } from '@/stores/env';
 import { versionSchema, versionErrorEnum } from '@/utils/validate';
 import { DevboxListItemTypeV2, DevboxVersionListItemType } from '@/types/devbox';
-import { releaseDevbox, shutdownDevbox, startDevbox, getDevboxVersionList } from '@/api/devbox';
+import { DevboxStatusEnum } from '@/constants/devbox';
+import {
+  releaseDevbox,
+  shutdownDevbox,
+  startDevbox,
+  getDevboxVersionList,
+  getDevboxByName
+} from '@/api/devbox';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 
 import {
@@ -101,14 +108,35 @@ const ReleaseDialog = ({ onClose, onSuccess, devbox, open }: ReleaseDialogProps)
       try {
         setLoading(true);
 
-        // 1.pause devbox
-        if (devbox.status.value === 'Running') {
+        const isRunning = devbox.status.value === 'Running';
+
+        // Step 1: Shutdown devbox if it's running (required before release)
+        if (isRunning) {
+          toast.info(t('auto_shutting_down'));
+
           await shutdownDevbox({
             devboxName: devbox.name,
             shutdownMode: 'Stopped'
           });
-          // wait 3s
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          // Poll devbox status for 2 minutes to ensure it's stopped
+          const timeout = 2 * 60 * 1000; // 2 minutes
+          const pollInterval = 3000; // 3 seconds
+          const startTime = Date.now();
+          let isStopped = false;
+
+          while (Date.now() - startTime < timeout) {
+            const devboxDetail = await getDevboxByName(devbox.name);
+            if (devboxDetail.status.value === DevboxStatusEnum.Stopped) {
+              isStopped = true;
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+          }
+
+          if (!isStopped) {
+            throw new Error(t('devbox_shutdown_timeout'));
+          }
         }
         // 2.release devbox
         await releaseDevbox({
@@ -244,9 +272,7 @@ const ReleaseDialog = ({ onClose, onSuccess, devbox, open }: ReleaseDialogProps)
                 className="w-[462px]"
                 maxLength={500}
               />
-              <div className="mt-1 text-right text-sm text-gray-500">
-                {releaseDes.length}/500
-              </div>
+              <div className="mt-1 text-right text-sm text-gray-500">{releaseDes.length}/500</div>
             </div>
           </div>
         </div>
