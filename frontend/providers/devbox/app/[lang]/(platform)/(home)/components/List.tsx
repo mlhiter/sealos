@@ -34,11 +34,7 @@ import {
 import { useRouter } from '@/i18n';
 import { useDateTimeStore } from '@/stores/date';
 import { usePriceStore } from '@/stores/price';
-import {
-  DevboxListItemTypeV2,
-  DevboxStatusMapType,
-  DevboxStatusValueType
-} from '@/types/devbox';
+import { DevboxListItemTypeV2, DevboxStatusMapType, DevboxStatusValueType } from '@/types/devbox';
 import { DevboxStatusEnum, devboxStatusMap } from '@/constants/devbox';
 import { useControlDevbox } from '@/hooks/useControlDevbox';
 
@@ -143,11 +139,6 @@ const DevboxList = ({
     setOnOpenRelease(true);
   }, []);
 
-  const handleEditRemark = useCallback((item: DevboxListItemTypeV2) => {
-    setOnOpenEditRemark(true);
-    setEditRemarkItem(item);
-  }, []);
-
   const handleOpenShutdownModal = useCallback((item: DevboxListItemTypeV2) => {
     setOnOpenShutdown(true);
     setCurrentDevboxListItem(item);
@@ -158,7 +149,6 @@ const DevboxList = ({
   }, []);
 
   const columns = useMemo<ColumnDef<DevboxListItemTypeV2>[]>(
-<<<<<<< HEAD
     () =>
       [
         {

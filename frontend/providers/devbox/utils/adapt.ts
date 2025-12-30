@@ -42,8 +42,7 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
     template,
     remark: devbox.metadata?.annotations?.[devboxRemarkKey] || '',
     status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
-    sshPort:
-      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
+    sshPort: devbox.status?.network.nodePort || 65535,
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
     memory: memoryFormatToMi(devbox.spec.resource.memory),
@@ -76,8 +75,7 @@ export const adaptDevboxDetailV2 = ([
     image: template.image,
     iconId: template.templateRepository.iconId || '',
     status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
-    sshPort:
-      devbox.spec.network.type === 'SSHGate' ? 2233 : devbox.status?.network.nodePort || 65535,
+    sshPort: devbox.status?.network.nodePort || 65535,
     isPause: devbox.status.phase === 'Stopped' || devbox.status.phase === 'Shutdown',
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
@@ -87,16 +85,7 @@ export const adaptDevboxDetailV2 = ([
       amount: Number(devbox.spec.resource[gpuResourceKey] || 1),
       manufacturers: 'nvidia'
     },
-    networks: portInfos || [],
-    lastTerminatedReason: devbox.status
-      ? devbox.status.lastState?.terminated && devbox.status.lastState.terminated.reason === 'Error'
-        ? devbox.status.state.waiting
-          ? devbox.status.state.waiting.reason
-          : devbox.status.state.terminated
-            ? devbox.status.state.terminated.reason
-            : ''
-        : ''
-      : ''
+    networks: portInfos || []
   };
 };
 export const adaptDevboxVersionListItem = (
