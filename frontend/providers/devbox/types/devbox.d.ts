@@ -128,6 +128,7 @@ export interface DevboxDetailTypeV2 extends json2DevboxData {
   templateRepositoryName: string;
   templateRepositoryDescription: string | null;
   status: DevboxStatusMapType;
+  state: DevboxStatusEnum;
   usedCpu?: MonitorDataResult;
   usedMemory?: MonitorDataResult;
   sshConfig?: {
@@ -176,6 +177,7 @@ export interface DevboxListItemTypeV2 {
     name: string;
   };
   status: DevboxStatusMapType;
+  state: DevboxStatusEnum;
   createTime: string;
   cpu: number;
   memory: number;

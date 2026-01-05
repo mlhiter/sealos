@@ -42,6 +42,7 @@ export const adaptDevboxListItemV2 = ([devbox, template]: [
     template,
     remark: devbox.metadata?.annotations?.[devboxRemarkKey] || '',
     status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
+    state: devbox.spec.state || 'Error',
     sshPort: devbox.status?.network.nodePort || 65535,
     createTime: devbox.metadata.creationTimestamp,
     cpu: cpuFormatToM(devbox.spec.resource.cpu),
@@ -75,6 +76,7 @@ export const adaptDevboxDetailV2 = ([
     image: template.image,
     iconId: template.templateRepository.iconId || '',
     status: devboxStatusMap[devbox.status.phase] || devboxStatusMap.Error, // use devbox.status.phase to get status
+    state: devbox.spec.state || 'Error',
     sshPort: devbox.status?.network.nodePort || 65535,
     isPause: devbox.status.phase === 'Stopped' || devbox.status.phase === 'Shutdown',
     createTime: devbox.metadata.creationTimestamp,
