@@ -15,6 +15,7 @@ import { getRegionUid } from '@/utils/env';
 import { adaptDevboxDetailV2 } from '@/utils/adapt';
 import { parseTemplateConfig, cpuFormatToM, memoryFormatToMi } from '@/utils/tools';
 import { generateDevboxRbacAndJob } from '@/utils/rbacJobGenerator';
+import { CUSTOM_RUNTIME_ICON_ID, collectValidTemplateIDs } from '@/utils/devboxTemplate';
 
 export const dynamic = 'force-dynamic';
 
@@ -654,9 +655,7 @@ export async function GET(req: NextRequest) {
 
     const devboxBody = devboxResponse.body as { items: KBDevboxTypeV2[] };
     //2.get-template-uid
-    const uidList = devboxBody.items
-      .map((item) => item.spec.templateID)
-      .filter((uid): uid is string => typeof uid === 'string' && uid.length > 0);
+    const uidList = collectValidTemplateIDs(devboxBody.items.map((item) => item.spec.templateID));
     //3.uid to database search template
     const templateResultList = uidList.length
       ? await devboxDB.template.findMany({
@@ -680,24 +679,21 @@ export async function GET(req: NextRequest) {
       templateResultList.map((template) => [template.uid, template.templateRepository.iconId])
     );
 
-    const data = devboxBody.items
-      .map((item) => {
-        const runtime = templateMap.get(item.spec.templateID);
-        if (!runtime) return null;
+    const data = devboxBody.items.map((item) => {
+      const runtime = templateMap.get(item.spec.templateID) || CUSTOM_RUNTIME_ICON_ID;
 
-        return {
-          name: item.metadata.name,
-          uid: item.metadata.uid,
-          resourceType: 'devbox' as const,
-          runtime,
-          status: item.status?.phase || 'Pending',
-          resources: {
-            cpu: cpuFormatToM(item.spec?.resource?.cpu || '0'),
-            memory: memoryFormatToMi(item.spec?.resource?.memory || '0')
-          }
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+      return {
+        name: item.metadata.name,
+        uid: item.metadata.uid,
+        resourceType: 'devbox' as const,
+        runtime,
+        status: item.status?.phase || 'Pending',
+        resources: {
+          cpu: cpuFormatToM(item.spec?.resource?.cpu || '0'),
+          memory: memoryFormatToMi(item.spec?.resource?.memory || '0')
+        }
+      };
+    });
 
     return jsonRes({ data });
   } catch (err: any) {

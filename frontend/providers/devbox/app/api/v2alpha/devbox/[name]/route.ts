@@ -10,12 +10,14 @@ import { json2Service, json2Ingress } from '@/utils/json2Yaml';
 import { ProtocolType } from '@/types/devbox';
 import { KBDevboxTypeV2 } from '@/types/k8s';
 import { devboxDB } from '@/services/db/init';
+import { TemplateRepositoryKind } from '@/prisma/generated/client';
 import {
   calculateUptime,
   parseTemplateConfig,
   cpuFormatToM,
   memoryFormatToMi
 } from '@/utils/tools';
+import { CUSTOM_RUNTIME_ICON_ID, isValidTemplateID } from '@/utils/devboxTemplate';
 import { UpdateDevboxRequestSchema, DeleteDevboxRequestSchema, nanoid } from './schema';
 
 //need really realtime use force-dynamic
@@ -619,31 +621,45 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
       devboxName
     )) as { body: KBDevboxTypeV2 };
 
-    // Get template information from database
-    const template = await devboxDB.template.findUnique({
-      where: {
-        uid: devboxBody.spec.templateID
-      },
-      select: {
-        templateRepository: {
+    const templateID = devboxBody.spec.templateID;
+    const template = isValidTemplateID(templateID)
+      ? await devboxDB.template.findUnique({
+          where: {
+            uid: templateID
+          },
           select: {
+            templateRepository: {
+              select: {
+                uid: true,
+                iconId: true,
+                name: true,
+                kind: true,
+                description: true
+              }
+            },
             uid: true,
-            iconId: true,
+            image: true,
             name: true,
-            kind: true,
-            description: true
+            config: true
           }
-        },
-        uid: true,
-        image: true,
-        name: true,
-        config: true
-      }
-    });
+        })
+      : null;
 
-    if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 500 });
-    }
+    const rawSpecConfigForTemplate = (devboxBody.spec.config as any) || {};
+    const fallbackTemplate = {
+      templateRepository: {
+        uid: 'external',
+        iconId: CUSTOM_RUNTIME_ICON_ID,
+        name: CUSTOM_RUNTIME_ICON_ID,
+        kind: TemplateRepositoryKind.CUSTOM,
+        description: 'External Devbox'
+      },
+      uid: typeof templateID === 'string' && templateID.length > 0 ? templateID : 'external',
+      image: devboxBody.spec.image || '',
+      name: CUSTOM_RUNTIME_ICON_ID,
+      config: JSON.stringify(rawSpecConfigForTemplate)
+    };
+    const resolvedTemplate = template || fallbackTemplate;
 
     const label = `${devboxKey}=${devboxName}`;
     const podLabel = `app.kubernetes.io/name=${devboxName}`;
@@ -667,7 +683,7 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
     const pods = podsResponse?.body.items || [];
 
     // Parse template config
-    const config = parseTemplateConfig(template.config);
+    const config = parseTemplateConfig(resolvedTemplate.config);
 
     // Build SSH information
     const sshPort = devboxBody.status?.network?.nodePort || 0;
@@ -676,8 +692,8 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
     const ssh = {
       host: sshDomain || '',
       port: sshPort,
-      user: config.user,
-      workingDir: config.workingDir,
+      user: config.user || 'devbox',
+      workingDir: config.workingDir || '/home/devbox/project',
       ...(base64PrivateKey && { privateKey: base64PrivateKey })
     };
 
@@ -745,8 +761,8 @@ export async function GET(req: NextRequest, { params }: { params: { name: string
       upTime,
       uid: devboxBody.metadata?.uid || '',
       resourceType: 'devbox',
-      runtime: template.templateRepository.iconId || '',
-      image: template.image,
+      runtime: resolvedTemplate.templateRepository.iconId || '',
+      image: resolvedTemplate.image,
       status: (devboxBody.status?.phase || 'Pending').toLowerCase(),
       quota,
       ssh,

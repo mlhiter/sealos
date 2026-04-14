@@ -4,10 +4,12 @@ import { authSession } from '@/services/backend/auth';
 import { getK8s } from '@/services/backend/kubernetes';
 import { jsonRes } from '@/services/backend/response';
 import { devboxDB } from '@/services/db/init';
+import { TemplateRepositoryKind } from '@/prisma/generated/client';
 import { ProtocolType } from '@/types/devbox';
 import { PortInfos } from '@/types/ingress';
 import { KBDevboxTypeV2 } from '@/types/k8s';
 import { adaptDevboxDetailV2 } from '@/utils/adapt';
+import { CUSTOM_RUNTIME_ICON_ID, isValidTemplateID } from '@/utils/devboxTemplate';
 import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -44,31 +46,42 @@ export async function GET(req: NextRequest) {
       'devboxes',
       devboxName
     )) as { body: KBDevboxTypeV2 };
-    const template = await devboxDB.template.findUnique({
-      where: {
-        uid: devboxBody.spec.templateID
-      },
-      select: {
-        templateRepository: {
+
+    const templateID = devboxBody.spec.templateID;
+    const template = isValidTemplateID(templateID)
+      ? await devboxDB.template.findUnique({
+          where: {
+            uid: templateID
+          },
           select: {
+            templateRepository: {
+              select: {
+                uid: true,
+                iconId: true,
+                name: true,
+                kind: true,
+                description: true
+              }
+            },
             uid: true,
-            iconId: true,
-            name: true,
-            kind: true,
-            description: true
+            image: true,
+            name: true
           }
-        },
-        uid: true,
-        image: true,
-        name: true
-      }
-    });
-    if (!template) {
-      return jsonRes({
-        code: 500,
-        error: 'template not found'
-      });
-    }
+        })
+      : null;
+
+    const resolvedTemplate = template || {
+      templateRepository: {
+        uid: 'external',
+        iconId: CUSTOM_RUNTIME_ICON_ID,
+        name: CUSTOM_RUNTIME_ICON_ID,
+        kind: TemplateRepositoryKind.CUSTOM,
+        description: 'External Devbox'
+      },
+      uid: typeof templateID === 'string' && templateID.length > 0 ? templateID : 'external',
+      image: devboxBody.spec.image || '',
+      name: CUSTOM_RUNTIME_ICON_ID
+    };
     const label = `${devboxKey}=${devboxName}`;
     // get ingresses, service, configmaps, and pvcs
     const [ingressesResponse, serviceResponse, configMapsResponse, pvcsResponse] =
@@ -123,7 +136,7 @@ export async function GET(req: NextRequest) {
         };
       }) || [];
 
-    const data = adaptDevboxDetailV2([devboxBody, portInfos, template, configMaps, pvcs]);
+    const data = adaptDevboxDetailV2([devboxBody, portInfos, resolvedTemplate, configMaps, pvcs]);
 
     return jsonRes({ data });
   } catch (err: any) {
