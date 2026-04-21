@@ -2,10 +2,11 @@ import dayjs from 'dayjs';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import { subDays } from 'date-fns';
 
 import { useDevboxStore } from '@/stores/devbox';
 import { useDateTimeStore } from '@/stores/date';
-import { parseTimeRange } from '@/utils/timeRange';
+import { ALL_TIME_START_DATE } from '@/utils/timeRange';
 
 import DatePicker from '@/components/DatePicker';
 import MonitorChart from '@/components/MonitorChart';
@@ -20,35 +21,56 @@ const Monitor = () => {
   const [isTimeInitialized, setIsTimeInitialized] = useState(false);
 
   useEffect(() => {
-    const allTimeStartDate = new Date('1970-01-01T00:00:00Z');
-    const isAllTime = startDateTime.getTime() === allTimeStartDate.getTime();
+    const isAllTime = startDateTime.getTime() === ALL_TIME_START_DATE.getTime();
 
     if (isAllTime) {
-      const { startTime, endTime } = parseTimeRange('7d');
+      const endTime = new Date();
+      const startTime = subDays(endTime, 7);
       setStartDateTime(startTime);
       setEndDateTime(endTime);
     }
     setIsTimeInitialized(true);
 
     return () => {
-      setStartDateTime(allTimeStartDate);
+      setStartDateTime(new Date(ALL_TIME_START_DATE));
       setEndDateTime(new Date());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    if (!params?.name) return;
-    await loadDetailMonitorData(
-      params.name as string,
-      startDateTime.getTime(),
-      endDateTime.getTime()
-    );
-  }, [params?.name, startDateTime, endDateTime, loadDetailMonitorData]);
+  const getEffectiveMonitorRange = useCallback(() => {
+    if (startDateTime.getTime() !== ALL_TIME_START_DATE.getTime()) {
+      return {
+        startTime: startDateTime,
+        endTime: endDateTime
+      };
+    }
+
+    const endTime = new Date();
+    const startTime = subDays(endTime, 7);
+    setStartDateTime(startTime);
+    setEndDateTime(endTime);
+
+    return { startTime, endTime };
+  }, [endDateTime, setEndDateTime, setStartDateTime, startDateTime]);
 
   useEffect(() => {
+    if (startDateTime.getTime() !== ALL_TIME_START_DATE.getTime()) return;
+    const endTime = new Date();
+    setStartDateTime(subDays(endTime, 7));
+    setEndDateTime(endTime);
+  }, [setEndDateTime, setStartDateTime, startDateTime]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!params?.name || !isTimeInitialized) return;
+    const { startTime, endTime } = getEffectiveMonitorRange();
+    await loadDetailMonitorData(params.name as string, startTime.getTime(), endTime.getTime());
+  }, [params?.name, getEffectiveMonitorRange, loadDetailMonitorData, isTimeInitialized]);
+
+  useEffect(() => {
+    if (!isTimeInitialized) return;
     handleRefresh();
-  }, [handleRefresh]);
+  }, [handleRefresh, isTimeInitialized]);
 
   return (
     <div className="flex h-full flex-1 flex-col items-start gap-2">
@@ -56,7 +78,7 @@ const Monitor = () => {
       <div className="flex w-full items-center justify-between rounded-xl border-[0.5px] bg-white p-6 shadow-xs">
         <div className="flex items-center gap-4">
           <span className="text-lg/7 font-medium">{t('filter')}</span>
-          {isTimeInitialized && <DatePicker onClose={handleRefresh} />}
+          {isTimeInitialized && <DatePicker onClose={handleRefresh} showAllTime={false} />}
           <RefreshButton onRefresh={handleRefresh} />
         </div>
         <span className="text-sm/5 text-neutral-500">
