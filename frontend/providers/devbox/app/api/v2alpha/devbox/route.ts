@@ -12,6 +12,7 @@ import { RequestSchema, nanoid } from './schema';
 import { getRegionUid } from '@/utils/env';
 import { parseTemplateConfig } from '@/utils/tools';
 import { generateDevboxRbacAndJob } from '@/utils/rbacJobGenerator';
+import { CUSTOM_RUNTIME_ICON_ID, collectValidTemplateIDs } from '@/utils/devboxTemplate';
 import { cpuFormatToM, memoryFormatToMi } from '@sealos/shared';
 
 export const dynamic = 'force-dynamic';
@@ -609,46 +610,45 @@ export async function GET(req: NextRequest) {
 
     const devboxBody = devboxResponse.body as { items: KBDevboxTypeV2[] };
     //2.get-template-uid
-    const uidList = devboxBody.items.map((item) => item.spec.templateID);
+    const uidList = collectValidTemplateIDs(devboxBody.items.map((item) => item.spec.templateID));
     //3.uid to database search template
-    const templateResultList = await devboxDB.template.findMany({
-      where: {
-        uid: {
-          in: uidList
-        }
-      },
-      select: {
-        uid: true,
-        templateRepository: {
+    const templateResultList = uidList.length
+      ? await devboxDB.template.findMany({
+          where: {
+            uid: {
+              in: uidList
+            }
+          },
           select: {
-            iconId: true
+            uid: true,
+            templateRepository: {
+              select: {
+                iconId: true
+              }
+            }
           }
-        }
-      }
-    });
+        })
+      : [];
 
     const templateMap = new Map(
       templateResultList.map((template) => [template.uid, template.templateRepository.iconId])
     );
 
-    const data = devboxBody.items
-      .map((item) => {
-        const runtime = templateMap.get(item.spec.templateID);
-        if (!runtime) return null;
+    const data = devboxBody.items.map((item) => {
+      const runtime = templateMap.get(item.spec.templateID) || CUSTOM_RUNTIME_ICON_ID;
 
-        return {
-          name: item.metadata.name,
-          uid: item.metadata.uid,
-          resourceType: 'devbox' as const,
-          runtime,
-          status: (item.status?.phase || 'pending').toLowerCase(),
-          quota: {
-            cpu: cpuFormatToM(item.spec.resource.cpu) / 1000,
-            memory: memoryFormatToMi(item.spec.resource.memory) / 1024
-          }
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+      return {
+        name: item.metadata.name,
+        uid: item.metadata.uid,
+        resourceType: 'devbox' as const,
+        runtime,
+        status: (item.status?.phase || 'pending').toLowerCase(),
+        quota: {
+          cpu: cpuFormatToM(item.spec.resource.cpu) / 1000,
+          memory: memoryFormatToMi(item.spec.resource.memory) / 1024
+        }
+      };
+    });
 
     return NextResponse.json(data);
   } catch (err: any) {

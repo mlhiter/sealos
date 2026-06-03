@@ -5,6 +5,7 @@ import { getK8s } from '@/services/backend/kubernetes';
 import { jsonRes } from '@/services/backend/response';
 import { devboxDB } from '@/services/db/init';
 import { KBDevboxTypeV2 } from '@/types/k8s';
+import { isValidTemplateID } from '@/utils/devboxTemplate';
 import { parseTemplateConfig } from '@/utils/tools';
 import { RequestSchema } from './schema';
 
@@ -62,22 +63,28 @@ export async function GET(req: NextRequest) {
       'devboxes',
       devboxName
     )) as { body: KBDevboxTypeV2 };
-    const template = await devboxDB.template.findUnique({
-      where: {
-        uid: devboxBody.spec.templateID
-      }
-    });
-    if (!template) throw new Error(`Template ${devboxBody.spec.templateID} is not found`);
-    const config = parseTemplateConfig(template.config);
+    const templateID = devboxBody.spec.templateID;
+    const template = isValidTemplateID(templateID)
+      ? await devboxDB.template.findUnique({
+          where: {
+            uid: templateID
+          }
+        })
+      : null;
+
+    const specConfig = (devboxBody.spec.config || {}) as any;
+    const parsedSpecConfig = parseTemplateConfig(JSON.stringify(specConfig));
+    const config = template ? parseTemplateConfig(template.config) : parsedSpecConfig;
+
     return jsonRes({
       data: {
         base64PublicKey,
         base64PrivateKey,
         token,
-        userName: config.user,
-        workingDir: config.workingDir,
-        releaseCommand: config.releaseCommand.join(' '),
-        releaseArgs: config.releaseArgs.join(' ')
+        userName: config.user || 'devbox',
+        workingDir: config.workingDir || '/home/devbox/project',
+        releaseCommand: (config.releaseCommand || []).join(' '),
+        releaseArgs: (config.releaseArgs || []).join(' ')
       }
     });
   } catch (err: any) {
