@@ -77,8 +77,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-RUN apk add curl \
-  && apk add ca-certificates \
+RUN apk add --no-cache curl ca-certificates postgresql-client \
   && update-ca-certificates \
   && apk add --no-cache dumb-init
 
