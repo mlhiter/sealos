@@ -8,6 +8,12 @@ import {
   yamlString2Objects
 } from '@/utils/deployYaml2Json';
 import type { AppEditType } from '@/types/app';
+import {
+  PVC_REFERENCES_ANNOTATION,
+  PVC_REFERENCE_NAME_ANNOTATION,
+  PVC_REFERENCE_SOURCE_LABEL,
+  PVC_REFERENCE_SOURCE_TYPE_LABEL
+} from '@/utils/pvcReference';
 
 const createApp = (customDomain = ''): AppEditType =>
   ({
@@ -466,5 +472,110 @@ describe('json2Secret', () => {
 
     expect(secretYaml).toContain('.dockerconfigjson: ********');
     expect(secretYaml).not.toContain(".dockerconfigjson: '********'");
+  });
+});
+
+describe('json2DeployCr PVC reference metadata', () => {
+  it('declares mounted existing PVC references on Deployment metadata', () => {
+    const app = createApp();
+    app.volumes = [
+      {
+        name: 'shared-data',
+        persistentVolumeClaim: {
+          claimName: 'team-data'
+        }
+      }
+    ];
+    app.volumeMounts = [
+      {
+        name: 'shared-data',
+        mountPath: '/data'
+      }
+    ];
+
+    const deployment = yamlString2Objects(json2DeployCr(app, 'deployment'))[0] as any;
+
+    expect(deployment.metadata.labels[PVC_REFERENCE_SOURCE_LABEL]).toBe('true');
+    expect(deployment.metadata.labels[PVC_REFERENCE_SOURCE_TYPE_LABEL]).toBe('applaunchpad');
+    expect(deployment.metadata.annotations[PVC_REFERENCE_NAME_ANNOTATION]).toBe('demo');
+    expect(JSON.parse(deployment.metadata.annotations[PVC_REFERENCES_ANNOTATION])).toEqual([
+      {
+        name: 'team-data',
+        relation: 'mounted',
+        mountPath: '/data'
+      }
+    ]);
+  });
+
+  it('declares release-v5.1 remote and network store references', () => {
+    const app = createApp();
+    app.storeList = [
+      {
+        name: 'remote-data',
+        path: '/data/remote',
+        value: 10,
+        storageType: 'remote'
+      }
+    ];
+    app.networkStoreList = [
+      {
+        name: 'shared-data',
+        path: '/data/shared'
+      }
+    ];
+
+    const deployment = yamlString2Objects(json2DeployCr(app, 'deployment'))[0] as any;
+
+    expect(JSON.parse(deployment.metadata.annotations[PVC_REFERENCES_ANNOTATION])).toEqual([
+      {
+        name: 'remote-data',
+        relation: 'mounted',
+        mountPath: '/data/remote'
+      },
+      {
+        name: 'shared-data',
+        relation: 'mounted',
+        mountPath: '/data/shared'
+      }
+    ]);
+  });
+
+  it('labels StatefulSet claim-template owners without listing generated PVC names', () => {
+    const app = createApp();
+    app.storeList = [
+      {
+        name: 'data',
+        path: '/var/lib/data',
+        value: 10,
+        storageType: 'local'
+      }
+    ];
+
+    const statefulSet = yamlString2Objects(json2DeployCr(app, 'statefulset'))[0] as any;
+
+    expect(statefulSet.metadata.labels[PVC_REFERENCE_SOURCE_LABEL]).toBe('true');
+    expect(statefulSet.metadata.labels[PVC_REFERENCE_SOURCE_TYPE_LABEL]).toBe('applaunchpad');
+    expect(statefulSet.metadata.annotations[PVC_REFERENCE_NAME_ANNOTATION]).toBe('demo');
+    expect(JSON.parse(statefulSet.metadata.annotations[PVC_REFERENCES_ANNOTATION])).toEqual([]);
+    expect(statefulSet.spec.volumeClaimTemplates).toEqual([
+      {
+        metadata: {
+          annotations: {
+            path: '/var/lib/data',
+            storageType: 'local',
+            value: '10'
+          },
+          name: 'data'
+        },
+        spec: {
+          accessModes: ['ReadWriteOnce'],
+          resources: {
+            requests: {
+              storage: '10Gi'
+            }
+          }
+        }
+      }
+    ]);
   });
 });

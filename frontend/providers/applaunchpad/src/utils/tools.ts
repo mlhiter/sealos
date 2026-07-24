@@ -6,6 +6,7 @@ import yaml from 'js-yaml';
 import { DeployKindsType } from '@/types/app';
 import type { AppDetailType, AppPatchPropsType } from '@/types/app';
 import { YamlKindEnum } from './adapt';
+import { copyPvcReferenceMetadata } from '@/utils/pvcReference';
 import { useTranslation } from 'next-i18next';
 import * as jsonpatch from 'fast-json-patch';
 import { Base64 } from 'js-base64';
@@ -329,11 +330,13 @@ const createRestartTimePatch = (workload: DeployKindsType, restartTime: string) 
 const ensureRestartTimePatch = ({
   actions,
   originalYamlList,
-  oldFormJsonList
+  oldFormJsonList,
+  newFormJsonList
 }: {
   actions: AppPatchPropsType;
   originalYamlList: DeployKindsType[];
   oldFormJsonList: DeployKindsType[];
+  newFormJsonList: DeployKindsType[];
 }) => {
   const workload =
     originalYamlList.find((item) => isWorkloadKind(item.kind)) ||
@@ -345,8 +348,12 @@ const ensureRestartTimePatch = ({
   const workloadPatch = actions.find(
     (item) => item.type === 'patch' && item.kind === workload.kind
   ) as Extract<AppPatchPropsType[number], { type: 'patch' }> | undefined;
+  const renderedWorkload = newFormJsonList.find(
+    (item) => item.kind === workload.kind && item.metadata?.name === workload.metadata?.name
+  );
 
   if (workloadPatch) {
+    if (renderedWorkload) copyPvcReferenceMetadata(workloadPatch.value, renderedWorkload);
     workloadPatch.value.spec = workloadPatch.value.spec || {};
     workloadPatch.value.spec.template = workloadPatch.value.spec.template || {};
     workloadPatch.value.spec.template.metadata = workloadPatch.value.spec.template.metadata || {};
@@ -356,10 +363,13 @@ const ensureRestartTimePatch = ({
     return;
   }
 
+  const restartPatch = createRestartTimePatch(workload, restartTime);
+  if (renderedWorkload) copyPvcReferenceMetadata(restartPatch, renderedWorkload);
+
   actions.push({
     type: 'patch',
     kind: workload.kind,
-    value: createRestartTimePatch(workload, restartTime)
+    value: restartPatch
   });
 };
 
@@ -553,6 +563,13 @@ export const patchYamlList = ({
             (patchResYamlJson as any).spec.template.spec.imagePullSecrets = null;
           }
 
+          if (
+            oldFormJson.kind === YamlKindEnum.Deployment ||
+            oldFormJson.kind === YamlKindEnum.StatefulSet
+          ) {
+            copyPvcReferenceMetadata(patchResYamlJson, newYamlJson);
+          }
+
           // delete invalid field
           // @ts-ignore
           delete patchResYamlJson.status;
@@ -606,7 +623,7 @@ export const patchYamlList = ({
   });
 
   if (configMapDataChanged && !workloadTemplateChanged) {
-    ensureRestartTimePatch({ actions, originalYamlList, oldFormJsonList });
+    ensureRestartTimePatch({ actions, originalYamlList, oldFormJsonList, newFormJsonList });
   }
 
   return actions;

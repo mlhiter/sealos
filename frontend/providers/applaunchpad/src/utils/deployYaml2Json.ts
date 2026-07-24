@@ -17,6 +17,7 @@ import {
 import type { CustomDomainMode } from '@/types';
 import type { AppEditType } from '@/types/app';
 import { syncDefaultRouteServicePort } from '@/utils/network-routes';
+import { withPvcReferenceMetadata } from '@/utils/pvcReference';
 import { ensureUniquePortNames, getFallbackPortName, str2Num, strToBase64 } from '@/utils/tools';
 import type { V1OwnerReference } from '@kubernetes/client-node';
 import yaml from 'js-yaml';
@@ -137,7 +138,7 @@ export const json2DeployCr = (data: AppEditType, type: 'deployment' | 'statefuls
           {} as Record<string, null>
         );
 
-  const metadata = {
+  const baseMetadata = {
     name: data.appName,
     annotations: {
       originImageName: data.imageName,
@@ -324,6 +325,14 @@ export const json2DeployCr = (data: AppEditType, type: 'deployment' | 'statefuls
     ...networkStoreVolumeMounts,
     ...sharedMemoryVolumeMount
   ];
+
+  const metadata = withPvcReferenceMetadata(
+    baseMetadata,
+    'applaunchpad',
+    data.appName,
+    finalVolumes,
+    finalVolumeMounts
+  );
 
   // Local stores: add to volumeClaimTemplates (per-instance storage)
   const storageTemplates = localStores.map((store) => ({

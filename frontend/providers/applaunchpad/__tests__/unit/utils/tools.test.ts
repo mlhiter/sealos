@@ -6,6 +6,12 @@ import {
   yamlString2Objects
 } from '@/utils/deployYaml2Json';
 import type { AppEditType, DeployKindsType } from '@/types/app';
+import {
+  PVC_REFERENCES_ANNOTATION,
+  PVC_REFERENCE_NAME_ANNOTATION,
+  PVC_REFERENCE_SOURCE_LABEL,
+  PVC_REFERENCE_SOURCE_TYPE_LABEL
+} from '@/utils/pvcReference';
 import { patchYamlList } from '@/utils/tools';
 
 const createWorkload = (kind: 'Deployment' | 'StatefulSet', isPrivate: boolean) => ({
@@ -256,5 +262,165 @@ describe('patchYamlList restart behavior', () => {
       statefulSetPatch?.type === 'patch' &&
         statefulSetPatch.value.spec?.template?.metadata?.labels?.restartTime
     ).toBeFalsy();
+  });
+});
+
+describe('patchYamlList PVC reference metadata', () => {
+  it('backfills reference metadata onto a legacy workload during an edit', () => {
+    const oldApp = createApp();
+    oldApp.volumes = [
+      {
+        name: 'shared-data',
+        persistentVolumeClaim: {
+          claimName: 'team-data'
+        }
+      }
+    ];
+    oldApp.volumeMounts = [
+      {
+        name: 'shared-data',
+        mountPath: '/data'
+      }
+    ];
+    const newApp = { ...oldApp, replicas: 2 };
+    const oldYamlList = createYamlLists(oldApp);
+    const newYamlList = createYamlLists(newApp);
+    const originalYamlList = createOriginalYamlList(oldYamlList);
+    const legacyWorkload = originalYamlList.find((item) => item.kind === 'Deployment')!;
+
+    delete legacyWorkload.metadata?.labels?.[PVC_REFERENCE_SOURCE_LABEL];
+    delete legacyWorkload.metadata?.labels?.[PVC_REFERENCE_SOURCE_TYPE_LABEL];
+    delete legacyWorkload.metadata?.annotations?.[PVC_REFERENCE_NAME_ANNOTATION];
+    delete legacyWorkload.metadata?.annotations?.[PVC_REFERENCES_ANNOTATION];
+
+    const actions = patchYamlList({
+      parsedOldYamlList: oldYamlList,
+      parsedNewYamlList: newYamlList,
+      originalYamlList
+    });
+    const deploymentPatch = actions.find(
+      (item) => item.type === 'patch' && item.kind === 'Deployment'
+    );
+
+    expect(deploymentPatch?.type === 'patch' && deploymentPatch.value).toMatchObject({
+      metadata: {
+        labels: {
+          [PVC_REFERENCE_SOURCE_LABEL]: 'true',
+          [PVC_REFERENCE_SOURCE_TYPE_LABEL]: 'applaunchpad'
+        },
+        annotations: {
+          [PVC_REFERENCE_NAME_ANNOTATION]: 'demo',
+          [PVC_REFERENCES_ANNOTATION]: JSON.stringify([
+            {
+              name: 'team-data',
+              relation: 'mounted',
+              mountPath: '/data'
+            }
+          ])
+        }
+      }
+    });
+  });
+
+  it('backfills reference metadata when only ConfigMap data changes', () => {
+    const oldApp = createApp();
+    oldApp.networkStoreList = [
+      {
+        name: 'shared-data',
+        path: '/data'
+      }
+    ];
+    const newApp = {
+      ...oldApp,
+      configMapList: [{ ...oldApp.configMapList[0], value: 'new-value' }]
+    };
+    const oldYamlList = createYamlLists(oldApp);
+    const newYamlList = createYamlLists(newApp);
+    const originalYamlList = createOriginalYamlList(oldYamlList);
+    const legacyWorkload = originalYamlList.find((item) => item.kind === 'Deployment')!;
+
+    delete legacyWorkload.metadata?.labels?.[PVC_REFERENCE_SOURCE_LABEL];
+    delete legacyWorkload.metadata?.labels?.[PVC_REFERENCE_SOURCE_TYPE_LABEL];
+    delete legacyWorkload.metadata?.annotations?.[PVC_REFERENCE_NAME_ANNOTATION];
+    delete legacyWorkload.metadata?.annotations?.[PVC_REFERENCES_ANNOTATION];
+
+    const actions = patchYamlList({
+      parsedOldYamlList: oldYamlList,
+      parsedNewYamlList: newYamlList,
+      originalYamlList
+    });
+    const deploymentPatch = actions.find(
+      (item) => item.type === 'patch' && item.kind === 'Deployment'
+    );
+
+    expect(deploymentPatch?.type === 'patch' && deploymentPatch.value).toMatchObject({
+      metadata: {
+        labels: {
+          [PVC_REFERENCE_SOURCE_LABEL]: 'true',
+          [PVC_REFERENCE_SOURCE_TYPE_LABEL]: 'applaunchpad'
+        },
+        annotations: {
+          [PVC_REFERENCE_NAME_ANNOTATION]: 'demo',
+          [PVC_REFERENCES_ANNOTATION]: JSON.stringify([
+            {
+              name: 'shared-data',
+              relation: 'mounted',
+              mountPath: '/data'
+            }
+          ])
+        }
+      },
+      spec: {
+        template: {
+          metadata: {
+            labels: {
+              restartTime: expect.any(String)
+            }
+          }
+        }
+      }
+    });
+  });
+
+  it('clears stale references after the last mounted PVC is removed', () => {
+    const oldApp = createApp();
+    oldApp.networkStoreList = [
+      {
+        name: 'shared-data',
+        path: '/data'
+      }
+    ];
+    const newApp = { ...oldApp, networkStoreList: [] };
+    const oldYamlList = createYamlLists(oldApp);
+    const newYamlList = createYamlLists(newApp);
+
+    const actions = patchYamlList({
+      parsedOldYamlList: oldYamlList,
+      parsedNewYamlList: newYamlList,
+      originalYamlList: createOriginalYamlList(oldYamlList)
+    });
+    const deploymentPatch = actions.find(
+      (item) => item.type === 'patch' && item.kind === 'Deployment'
+    );
+
+    expect(deploymentPatch?.type === 'patch' && deploymentPatch.value).toMatchObject({
+      metadata: {
+        annotations: {
+          [PVC_REFERENCES_ANNOTATION]: '[]'
+        }
+      }
+    });
+
+    const deploymentVolumes =
+      deploymentPatch?.type === 'patch'
+        ? deploymentPatch.value.spec?.template?.spec?.volumes
+        : undefined;
+
+    expect(deploymentVolumes).toBeDefined();
+    expect(deploymentVolumes).not.toContainEqual(
+      expect.objectContaining({
+        name: 'shared-data'
+      })
+    );
   });
 });
