@@ -6,12 +6,15 @@ import path from 'path';
 import { readTemplatesFromFile } from '../../listTemplate';
 import { Config } from '@/config';
 import { getTemplateCategories } from '@/services/backend/template-categories';
+import { ensureTemplateRepoFresh } from '@/services/backend/template-repo';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const language = (req.query.language as string) || 'en';
   const originalPath = process.cwd();
   const jsonPath = path.resolve(originalPath, 'templates.json');
 
   try {
+    await ensureTemplateRepoFresh(originalPath);
+
     const config = Config();
     const categories = getTemplateCategories(config.template.categories);
     const templates = readTemplatesFromFile(

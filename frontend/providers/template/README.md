@@ -88,3 +88,8 @@ successfully regenerated. The generated `template-categories.json` file is a
 runtime cache and should stay ignored by git. If the repository categories file is
 missing or invalid, the provider falls back to `template.categories` from
 `config.yaml`.
+
+Template read APIs run a TTL-bound freshness check before reading the generated
+catalog. `TEMPLATE_REPO_SYNC_INTERVAL_MS` controls the interval and defaults to
+`30000`, so repository category changes made by Admin are picked up without
+manually calling `/api/updateRepo`.

@@ -7,8 +7,10 @@ import {
 } from '@sealos/shared/server/config';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getTemplateCategories } from '@/services/backend/template-categories';
+import { ensureTemplateRepoFresh } from '@/services/backend/template-repo';
 
-export function getClientAppConfigServer() {
+export async function getClientAppConfigServer() {
+  await ensureTemplateRepoFresh();
   const fullConfig = Config();
   const categories = getTemplateCategories(fullConfig.template.categories);
   return validateClientAppConfigOrThrow(ClientAppConfigSchema, {
@@ -26,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     jsonRes(res, {
       code: 200,
-      data: getClientAppConfigServer()
+      data: await getClientAppConfigServer()
     });
   } catch (error) {
     if (isServerMisconfiguredError(error)) {

@@ -24,6 +24,7 @@ import { readmeCache } from '@/utils/readmeCache';
 import { Config } from '@/config';
 import { proxyTemplateIconUrls, resolveTemplateAssetUrls } from '@/utils/templateAsset';
 import { getTemplateCategories } from '@/services/backend/template-categories';
+import { ensureTemplateRepoFresh } from '@/services/backend/template-repo';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -126,6 +127,8 @@ export async function GetTemplateByName({
   locale?: string;
   includeReadme?: string;
 }) {
+  await ensureTemplateRepoFresh();
+
   const config = Config();
   const cdnUrl = config.template.cdnHost;
   const categories = getTemplateCategories(config.template.categories);

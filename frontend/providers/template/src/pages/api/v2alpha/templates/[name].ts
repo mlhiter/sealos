@@ -17,6 +17,7 @@ import {
   getTemplateCatalogVersion,
   getTemplateCategories
 } from '@/services/backend/template-categories';
+import { ensureTemplateRepoFresh } from '@/services/backend/template-repo';
 
 // estimate min—max equality
 function simplifyResourceValue(
@@ -121,6 +122,8 @@ async function handleTemplateDetails(
   try {
     const originalPath = process.cwd();
     const jsonPath = path.resolve(originalPath, 'templates.json');
+
+    await ensureTemplateRepoFresh(originalPath);
 
     if (!fs.existsSync(jsonPath)) {
       return sendError(res, {
