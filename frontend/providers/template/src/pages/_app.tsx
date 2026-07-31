@@ -19,7 +19,6 @@ import {
   prefetchClientAppConfig,
   setupClientAppConfigDefaults
 } from '@sealos/shared';
-import { getClientAppConfigServer } from '@/pages/api/platform/getClientAppConfig';
 
 import '@sealos/driver/src/driver.css';
 import '@/styles/reset.scss';
@@ -254,6 +253,7 @@ MyApp.getInitialProps = async (context: AppContext): Promise<AppOwnProps & AppIn
 
   let dehydratedState: unknown;
   if (typeof window === 'undefined') {
+    const { getClientAppConfigServer } = await import('@/pages/api/platform/getClientAppConfig');
     const qc = new QueryClient();
     await prefetchClientAppConfig(qc, ['client-app-config'], getClientAppConfigServer);
     dehydratedState = dehydrate(qc);

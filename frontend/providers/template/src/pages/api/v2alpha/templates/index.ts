@@ -5,6 +5,10 @@ import path from 'path';
 import { getCachedTemplates } from './templateCache';
 import { Config } from '@/config';
 import { sendError, ErrorType, ErrorCode } from '@/types/v2alpha/error';
+import {
+  getTemplateCatalogVersion,
+  getTemplateCategories
+} from '@/services/backend/template-categories';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -20,17 +24,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const originalPath = process.cwd();
   const jsonPath = path.resolve(originalPath, 'templates.json');
 
-  // Add caching headers for GET requests
-  res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600'); // 5min client, 10min CDN
-  res.setHeader('ETag', `"template-list-${language}"`);
-
   try {
     // Use shared cache instead of directly reading templates
     const config = Config();
+    const categories = getTemplateCategories(config.template.categories);
+    const catalogVersion = getTemplateCatalogVersion(originalPath);
     const cacheResult = getCachedTemplates(
       jsonPath,
       config.template.cdnHost,
-      config.template.categories,
+      categories,
       language,
       config.template.repo
     );
@@ -56,14 +58,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    const menuKeys = getCategorySlugs(config.template.categories);
+    const menuKeys = getCategorySlugs(categories);
 
-    // Add menuKeys as response header if needed
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    res.setHeader('ETag', `"template-v2alpha-list-${language}-${catalogVersion}"`);
+
     if (menuKeys.length > 0) {
       res.setHeader('X-Menu-Keys', menuKeys.join(','));
     }
 
-    // Return templates array directly
     res.status(200).json(simplifiedTemplates);
   } catch (error) {
     sendError(res, {

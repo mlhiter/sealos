@@ -7,6 +7,7 @@ import { getResourceUsage, ResourceUsage } from '@/utils/usage';
 import { readTemplatesFromFile } from '../../listTemplate';
 import { GetTemplateByName } from '../../getTemplateSource';
 import { Config } from '@/config';
+import { getTemplateCategories } from '@/services/backend/template-categories';
 
 function simplifyResourceValue(
   resource: { min: number; max: number },
@@ -50,10 +51,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const config = Config();
+    const categories = getTemplateCategories(config.template.categories);
     const templates = readTemplatesFromFile(
       jsonPath,
       config.template.cdnHost,
-      config.template.categories,
+      categories,
       language,
       config.template.repo
     );

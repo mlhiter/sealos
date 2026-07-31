@@ -6,14 +6,16 @@ import {
   validateClientAppConfigOrThrow
 } from '@sealos/shared/server/config';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getTemplateCategories } from '@/services/backend/template-categories';
 
 export function getClientAppConfigServer() {
   const fullConfig = Config();
+  const categories = getTemplateCategories(fullConfig.template.categories);
   return validateClientAppConfigOrThrow(ClientAppConfigSchema, {
     brandName: fullConfig.template.ui.brandName,
     desktopDomain: fullConfig.template.desktopDomain,
     currencySymbol: fullConfig.template.ui.currencySymbol,
-    categories: fullConfig.template.categories,
+    categories,
     showAuthor: fullConfig.template.features.showAuthor,
     carousel: fullConfig.template.ui.carousel
   });
@@ -21,6 +23,7 @@ export function getClientAppConfigServer() {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     jsonRes(res, {
       code: 200,
       data: getClientAppConfigServer()

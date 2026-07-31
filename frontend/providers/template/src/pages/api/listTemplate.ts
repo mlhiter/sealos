@@ -9,6 +9,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
 import { Cron } from 'croner';
 import { Config } from '@/config';
+import {
+  getTemplateCatalogVersion,
+  getTemplateCategories
+} from '@/services/backend/template-categories';
 
 export function replaceRawWithCDN(url: string, cdnUrl: string) {
   let parsedUrl = parseGithubUrl(url);
@@ -118,10 +122,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const config = Config();
+    const categories = getTemplateCategories(config.template.categories);
     const templates = readTemplatesFromFile(
       jsonPath,
       config.template.cdnHost,
-      config.template.categories,
+      categories,
       language,
       config.template.repo
     );
@@ -129,7 +134,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
     console.log(`[${timestamp}] language: ${language}, templates count: ${templates.length}`);
 
-    const menuKeys = getCategorySlugs(config.template.categories).join(',');
+    const menuKeys = getCategorySlugs(categories).join(',');
+
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    res.setHeader(
+      'ETag',
+      `"template-list-${language || 'default'}-${getTemplateCatalogVersion()}"`
+    );
 
     jsonRes(res, { data: { templates: templates, menuKeys }, code: 200 });
   } catch (error) {

@@ -12,6 +12,10 @@ import {
 } from './templateCache';
 import { Config } from '@/config';
 import { sendError, ErrorType, ErrorCode } from '@/types/v2alpha/error';
+import {
+  getTemplateCatalogVersion,
+  getTemplateCategories
+} from '@/services/backend/template-categories';
 
 // estimate min—max equality
 function simplifyResourceValue(
@@ -94,10 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
-  // Add caching headers for GET requests
   if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
-    res.setHeader('ETag', `"${templateName}-${language}"`);
     return handleTemplateDetails(req, res, templateName, language);
   }
 
@@ -129,10 +130,12 @@ async function handleTemplateDetails(
       });
     }
     const config = Config();
+    const categories = getTemplateCategories(config.template.categories);
+    const catalogVersion = getTemplateCatalogVersion(originalPath);
     getCachedTemplates(
       jsonPath,
       config.template.cdnHost,
-      config.template.categories,
+      categories,
       language,
       config.template.repo
     );
@@ -216,6 +219,9 @@ async function handleTemplateDetails(
       args: template.spec.inputs || {},
       deployCount: template.spec.deployCount || 0
     };
+
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    res.setHeader('ETag', `"template-v2alpha-${templateName}-${language}-${catalogVersion}"`);
 
     res.status(200).json(result);
   } catch (error) {

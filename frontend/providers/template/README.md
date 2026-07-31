@@ -74,3 +74,17 @@
 │       └── user.ts
 └── tsconfig.json
 ```
+
+## Template repository categories
+
+The provider clones the template repository configured by `template.repo.url` and
+`template.repo.branch`, then builds `templates.json` from `template.repo.localDir`.
+Category menus and template category filtering prefer
+`<template-repo>/config/categories.json` when that file exists. The file is a JSON
+array of `{ "slug": string, "i18n": Record<string, string> }`.
+
+`/api/updateRepo` publishes the managed category list after `templates.json` is
+successfully regenerated. The generated `template-categories.json` file is a
+runtime cache and should stay ignored by git. If the repository categories file is
+missing or invalid, the provider falls back to `template.categories` from
+`config.yaml`.
