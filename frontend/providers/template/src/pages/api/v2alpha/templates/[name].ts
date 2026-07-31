@@ -13,6 +13,7 @@ import {
 import { Config } from '@/config';
 import { sendError, ErrorType, ErrorCode } from '@/types/v2alpha/error';
 import {
+  createTemplateCatalogEtag,
   getTemplateCatalogVersion,
   getTemplateCategories
 } from '@/services/backend/template-categories';
@@ -132,14 +133,15 @@ async function handleTemplateDetails(
     const config = Config();
     const categories = getTemplateCategories(config.template.categories);
     const catalogVersion = getTemplateCatalogVersion(originalPath);
-    getCachedTemplates(
+    const templateCache = getCachedTemplates(
       jsonPath,
       config.template.cdnHost,
       categories,
       language,
-      config.template.repo
+      config.template.repo,
+      catalogVersion
     );
-    const template = getTemplateFromCache(templateName);
+    const template = getTemplateFromCache(templateCache, templateName);
 
     if (!template) {
       return sendError(res, {
@@ -153,7 +155,12 @@ async function handleTemplateDetails(
     const i18nData = template.spec?.i18n?.[language];
 
     let simplifiedResource = null;
-    const cacheKey = `${templateName}-${language}`;
+    const cacheKey = createTemplateCatalogEtag([
+      'v2alpha-detail-resource',
+      templateName,
+      language,
+      catalogVersion
+    ]);
 
     // Check cache first
     simplifiedResource = getCachedTemplateDetail(cacheKey);
@@ -221,7 +228,10 @@ async function handleTemplateDetails(
     };
 
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    res.setHeader('ETag', `"template-v2alpha-${templateName}-${language}-${catalogVersion}"`);
+    res.setHeader(
+      'ETag',
+      createTemplateCatalogEtag(['v2alpha-detail', templateName, language, catalogVersion])
+    );
 
     res.status(200).json(result);
   } catch (error) {

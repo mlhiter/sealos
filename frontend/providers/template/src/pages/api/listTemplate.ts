@@ -10,6 +10,7 @@ import path from 'path';
 import { Cron } from 'croner';
 import { Config } from '@/config';
 import {
+  createTemplateCatalogEtag,
   getTemplateCatalogVersion,
   getTemplateCategories
 } from '@/services/backend/template-categories';
@@ -139,7 +140,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.setHeader(
       'ETag',
-      `"template-list-${language || 'default'}-${getTemplateCatalogVersion()}"`
+      createTemplateCatalogEtag([
+        'listTemplate',
+        language || 'default',
+        getTemplateCatalogVersion()
+      ])
     );
 
     jsonRes(res, { data: { templates: templates, menuKeys }, code: 200 });

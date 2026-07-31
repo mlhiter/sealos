@@ -15,10 +15,15 @@ import path from 'path';
 import { replaceRawWithCDN } from './listTemplate';
 import { getTemplateEnvs } from '@/utils/common';
 import { getResourceUsage, ResourceUsage } from '@/utils/usage';
-import { generateYamlData, getTemplateDefaultValues } from '@/utils/template';
+import {
+  filterConfiguredCategorySlugs,
+  generateYamlData,
+  getTemplateDefaultValues
+} from '@/utils/template';
 import { readmeCache } from '@/utils/readmeCache';
 import { Config } from '@/config';
 import { proxyTemplateIconUrls, resolveTemplateAssetUrls } from '@/utils/templateAsset';
+import { getTemplateCategories } from '@/services/backend/template-categories';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -123,6 +128,7 @@ export async function GetTemplateByName({
 }) {
   const config = Config();
   const cdnUrl = config.template.cdnHost;
+  const categories = getTemplateCategories(config.template.categories);
 
   const TemplateEnvs = getTemplateEnvs(namespace);
 
@@ -157,6 +163,10 @@ export async function GetTemplateByName({
     };
   }
   templateYaml.spec.deployCount = _tempalte?.spec?.deployCount;
+  templateYaml.spec.categories = filterConfiguredCategorySlugs(
+    templateYaml.spec.categories,
+    categories
+  );
   templateYaml = resolveTemplateAssetUrls(templateYaml, {
     repo: config.template.repo,
     templateFilePath,
