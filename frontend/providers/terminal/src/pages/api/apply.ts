@@ -1,6 +1,6 @@
 import { generateTerminalTemplate, TerminalStatus } from '@/interfaces/terminal';
 import { authSession } from '@/service/auth';
-import { ApplyYaml, CRDMeta, GetCRD, GetUserDefaultNameSpace, K8sApi } from '@/service/kubernetes';
+import { ApplyYaml, CRDMeta, GetCRD, GetTerminalNamespace, K8sApi } from '@/service/kubernetes';
 import { jsonRes } from '@/service/response';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const terminal_name = 'terminal-' + kube_user.name;
-    const namespace = GetUserDefaultNameSpace(kube_user.name);
+    const namespace = GetTerminalNamespace(kc, kube_user.name);
 
     // first get user namespace crd
     let terminal_meta_user = { ...terminal_meta };

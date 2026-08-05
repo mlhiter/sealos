@@ -49,6 +49,13 @@ export function GetUserDefaultNameSpace(user: string): string {
   return 'ns-' + user;
 }
 
+export function GetTerminalNamespace(kc: k8s.KubeConfig, user: string): string {
+  const currentContextName = kc.getCurrentContext();
+  const currentContext = kc.contexts.find((context) => context.name === currentContextName);
+
+  return currentContext?.namespace || GetUserDefaultNameSpace(user);
+}
+
 export async function GetCRD(
   kc: k8s.KubeConfig,
   meta: CRDMeta,
