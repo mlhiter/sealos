@@ -49,7 +49,7 @@ const Pods = ({ pods = [], appName }: { pods: PodDetailType[]; appName: string }
   const { openConfirm: openConfirmRestart, ConfirmChild: RestartConfirmChild } = useConfirm({
     content: 'Please confirm to restart the Pod?'
   });
-  const { appDetail = MOCK_APP_DETAIL, appDetailPods } = useAppStore();
+  const { appDetail = MOCK_APP_DETAIL } = useAppStore();
   const { isOpen: isOpenPodFile, onOpen: onOpenPodFile, onClose: onClosePodFile } = useDisclosure();
 
   const handleRestartPod = useCallback(
@@ -96,6 +96,23 @@ const Pods = ({ pods = [], appName }: { pods: PodDetailType[]; appName: string }
       }
     },
     [appName, t, toast]
+  );
+
+  const handleOpenFileManagement = useCallback(
+    async (podName: string, index: number) => {
+      try {
+        await checkPodExecPermission(podName);
+        setDetailFilePodIndex(index);
+        onOpenPodFile();
+      } catch (err) {
+        toast({
+          title: t(getErrText(err, 'Insufficient permissions')),
+          status: 'error'
+        });
+        console.log(err);
+      }
+    },
+    [onOpenPodFile, t, toast]
   );
 
   const columns: {
@@ -214,10 +231,7 @@ const Pods = ({ pods = [], appName }: { pods: PodDetailType[]; appName: string }
             </Button>
           </MyTooltip>
           <MyTooltip offset={[0, 10]} label={t('Terminal')}>
-            <Button
-              variant={'square'}
-              onClick={() => handleOpenTerminal(item.podName)}
-            >
+            <Button variant={'square'} onClick={() => handleOpenTerminal(item.podName)}>
               <MyIcon
                 className="driver-detail-terminal"
                 name={'terminal'}
@@ -242,13 +256,7 @@ const Pods = ({ pods = [], appName }: { pods: PodDetailType[]; appName: string }
           </MyTooltip>
           {appDetail.storeList?.length > 0 && (
             <MyTooltip offset={[0, 10]} label={t('File Management')}>
-              <Button
-                variant={'square'}
-                onClick={() => {
-                  setDetailFilePodIndex(i);
-                  onOpenPodFile();
-                }}
-              >
+              <Button variant={'square'} onClick={() => handleOpenFileManagement(item.podName, i)}>
                 <MyIcon name={'file'} w="18px" h="18px" fill={'#485264'} />
               </Button>
             </MyTooltip>
@@ -301,8 +309,8 @@ const Pods = ({ pods = [], appName }: { pods: PodDetailType[]; appName: string }
                     {col.render
                       ? col.render(app, i)
                       : col.dataIndex
-                      ? `${app[col.dataIndex]}`
-                      : '-'}
+                        ? `${app[col.dataIndex]}`
+                        : '-'}
                   </Td>
                 ))}
               </Tr>

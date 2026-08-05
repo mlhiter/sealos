@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/app';
 import { UPLOAD_LIMIT } from '@/store/static';
 import type { PodDetailType } from '@/types/app';
 import { TFile } from '@/utils/kubeFileSystem';
-import { formatSize, formatTime } from '@/utils/tools';
+import { formatSize, formatTime, getErrText } from '@/utils/tools';
 import { getUserKubeConfig } from '@/utils/user';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
@@ -196,6 +196,14 @@ const PodFile = ({
         })
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const payload = await res.clone().json();
+        if (payload?.code && payload.code !== 200) {
+          throw payload;
+        }
+      }
+
       if (res.ok) {
         const cloneRes = res.clone();
         const contentLength = file.size;
@@ -224,7 +232,12 @@ const PodFile = ({
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }
-    } catch (error: any) {}
+    } catch (error: any) {
+      message({
+        title: t(getErrText(error, 'Download failed')),
+        status: 'error'
+      });
+    }
   };
 
   const openModal = (e: MouseEvent<HTMLButtonElement>, handle: HandleType, file?: TFile) => {
