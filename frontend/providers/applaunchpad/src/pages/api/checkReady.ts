@@ -4,6 +4,7 @@ import { getK8s } from '@/services/backend/kubernetes';
 import { jsonRes } from '@/services/backend/response';
 import { ApplicationProtocolType } from '@/types/app';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getPublicAddressReadyResult } from '@/utils/publicAccess';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -49,21 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         try {
           const response = await fetch(fetchUrl);
-
-          if (response.status === 404 && response.headers.get('content-length') === '0') {
-            return { ready: false, url, error: '404' };
-          }
-
-          const text = await response.text();
-
-          if (
-            response.status === 503 &&
-            (text.includes('upstream connect error') || text.includes('upstream not health'))
-          ) {
-            return { ready: false, url, error: 'Upstream not healthy' };
-          }
-
-          return { ready: true, url };
+          return getPublicAddressReadyResult(response, url);
         } catch (error) {
           return { ready: false, url, error: 'fetch error' };
         }

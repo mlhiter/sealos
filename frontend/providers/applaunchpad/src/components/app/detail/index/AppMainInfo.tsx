@@ -31,6 +31,7 @@ import { useGuideStore } from '@/store/guide';
 import { startDriver, detailDriverObj } from '@/hooks/driver';
 import ICPStatus from './ICPStatus';
 import { CircleHelpIcon } from 'lucide-react';
+import { isPublicAddressAccessible, type PublicAddressStatus } from '@/utils/publicAccess';
 
 const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
   const { t } = useTranslation();
@@ -132,15 +133,12 @@ const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
   const statusMap = useMemo(
     () =>
       networkStatus
-        ? networkStatus.reduce(
-            (acc, item) => {
-              if (item?.url) {
-                acc[item.url] = item;
-              }
-              return acc;
-            },
-            {} as Record<string, { ready: boolean; url: string }>
-          )
+        ? networkStatus.reduce((acc, item) => {
+            if (item?.url) {
+              acc[item.url] = item;
+            }
+            return acc;
+          }, {} as Record<string, PublicAddressStatus>)
         : {},
     [networkStatus]
   );
@@ -205,6 +203,10 @@ const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
               </thead>
               <tbody>
                 {networks.map((network, index) => {
+                  const publicAddressAccessible = isPublicAddressAccessible({
+                    app,
+                    status: statusMap[network.public]
+                  });
                   return (
                     <tr key={network.inline + index}>
                       <th>
@@ -232,7 +234,7 @@ const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
                           >
                             {network.public && network.showReadyStatus && (
                               <>
-                                {statusMap[network.public]?.ready ? (
+                                {publicAddressAccessible ? (
                                   <Center
                                     fontSize={'12px'}
                                     fontWeight={400}
@@ -327,7 +329,7 @@ const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
                             {network.customDomain !== null &&
                               network.showReadyStatus === true &&
                               network.public &&
-                              !statusMap[network.public]?.ready && (
+                              !publicAddressAccessible && (
                                 <ICPStatus
                                   customDomain={network.customDomain}
                                   enabled={
@@ -335,7 +337,7 @@ const AppMainInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
                                     !!network.customDomain &&
                                     network.showReadyStatus === true &&
                                     !!network.public &&
-                                    !statusMap[network.public]?.ready
+                                    !publicAddressAccessible
                                   }
                                 />
                               )}
