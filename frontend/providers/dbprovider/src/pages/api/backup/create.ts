@@ -7,6 +7,7 @@ import { withErrorHandler } from '@/services/backend/middleware';
 import { json2ManualBackup } from '@/utils/json2Yaml';
 import { DBBackupMethodNameMap, DBBackupPolicyNameMap, DBTypeEnum } from '@/constants/db';
 import { ResponseCode } from '@/types/response';
+import { isValidBackupRemark } from '@/utils/backupRemark';
 
 export type Props = {
   backupName: string;
@@ -22,6 +23,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
     return jsonRes(res, {
       code: ResponseCode.BAD_REQUEST,
       message: 'params error'
+    });
+  }
+
+  if (!isValidBackupRemark(remark)) {
+    return jsonRes(res, {
+      code: ResponseCode.BAD_REQUEST,
+      message: 'remark_tip'
     });
   }
 
