@@ -29,8 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       );
     }
 
-    const firstPodName = `${dbName}-${DBBackupPolicyNameMap[dbType]}-0`;
-
     const { username, password, host, port, ...rest } = await fetchDBSecret(
       k8sCore,
       dbName,
@@ -71,47 +69,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ],
       [
         DBTypeEnum.redis,
-        [
-          'redis-cli',
-          '-h',
-          host,
-          '-p',
-          port,
-          '-a',
-          password,
-          'config',
-          'set',
-          'requirepass',
-          newPassword
-        ]
+        // Redis passwords are persisted through the KubeBlocks-managed credential secret.
+        // Updating the secret and restarting the cluster is the durable path here.
+        []
       ]
     ]);
-
-    const kubefs = new KubeFileSystem(k8sExec);
 
     if (showDatabaseCommand.get(dbType) === undefined) {
       throw new Error('Database type now not supported');
     }
 
-    const result = await kubefs.execCommand(
-      namespace,
-      firstPodName,
-      DBBackupPolicyNameMap[dbType],
-      showDatabaseCommand.get(dbType)!,
-      false
-    );
+    const command = showDatabaseCommand.get(dbType)!;
+    if (command.length > 0) {
+      const firstPodName = `${dbName}-${DBBackupPolicyNameMap[dbType]}-0`;
+      const kubefs = new KubeFileSystem(k8sExec);
+      const result = await kubefs.execCommand(
+        namespace,
+        firstPodName,
+        DBBackupPolicyNameMap[dbType],
+        command,
+        false
+      );
 
-    if (result.length < 10) {
-      throw new Error('Response from server is too short');
-    }
-
-    if (newPassword.includes('ERR') || result.includes('failed')) {
-      if (result.includes('ERR') || result.includes('failed')) {
-        throw new Error('Failed to change password');
+      if (result.length < 10) {
+        throw new Error('Response from server is too short');
       }
-    } else {
-      if (result.includes('exception') || result.includes('ServerError')) {
-        throw new Error('Failed to change password');
+
+      if (newPassword.includes('ERR') || result.includes('failed')) {
+        if (result.includes('ERR') || result.includes('failed')) {
+          throw new Error('Failed to change password');
+        }
+      } else {
+        if (result.includes('exception') || result.includes('ServerError')) {
+          throw new Error('Failed to change password');
+        }
       }
     }
 
