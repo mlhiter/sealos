@@ -29,13 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       );
     }
 
-    const componentName = DBBackupPolicyNameMap[dbType];
-    if (!componentName) {
-      throw new Error(`Password editing is not supported for database type: ${dbType}`);
-    }
-
-    const firstPodName = `${dbName}-${componentName}-0`;
-
     const { username, password, host, port, ...rest } = await fetchDBSecret(
       k8sCore,
       dbName,
@@ -76,47 +69,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ],
       [
         DBTypeEnum.redis,
-        [
-          'redis-cli',
-          '-h',
-          host,
-          '-p',
-          port,
-          '-a',
-          password,
-          'config',
-          'set',
-          'requirepass',
-          newPassword
-        ]
+        // Redis passwords are persisted through the KubeBlocks-managed credential secret.
+        // Updating the secret and restarting the cluster is the durable path here.
+        []
       ]
     ]);
-
-    const kubefs = new KubeFileSystem(k8sExec);
 
     if (showDatabaseCommand.get(dbType) === undefined) {
       throw new Error('Database type now not supported');
     }
 
-    const result = await kubefs.execCommand(
-      namespace,
-      firstPodName,
-      componentName,
-      showDatabaseCommand.get(dbType)!,
-      false
-    );
-
-    if (result.length < 10) {
-      throw new Error('Response from server is too short');
-    }
-
-    if (newPassword.includes('ERR') || result.includes('failed')) {
-      if (result.includes('ERR') || result.includes('failed')) {
-        throw new Error('Failed to change password');
+    const command = showDatabaseCommand.get(dbType)!;
+    if (command.length > 0) {
+      const componentName = DBBackupPolicyNameMap[dbType];
+      if (!componentName) {
+        throw new Error(`Password editing is not supported for database type: ${dbType}`);
       }
-    } else {
-      if (result.includes('exception') || result.includes('ServerError')) {
-        throw new Error('Failed to change password');
+
+      const firstPodName = `${dbName}-${componentName}-0`;
+      const kubefs = new KubeFileSystem(k8sExec);
+      const result = await kubefs.execCommand(
+        namespace,
+        firstPodName,
+        componentName,
+        command,
+        false
+      );
+
+      if (result.length < 10) {
+        throw new Error('Response from server is too short');
+      }
+
+      if (newPassword.includes('ERR') || result.includes('failed')) {
+        if (result.includes('ERR') || result.includes('failed')) {
+          throw new Error('Failed to change password');
+        }
+      } else {
+        if (result.includes('exception') || result.includes('ServerError')) {
+          throw new Error('Failed to change password');
+        }
       }
     }
 

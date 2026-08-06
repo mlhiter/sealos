@@ -643,7 +643,7 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
                   {t('direct_connection')}
                 </Center>
               )}
-              {[DBTypeEnum.mysql, DBTypeEnum.postgresql, DBTypeEnum.mongodb].includes(
+              {[DBTypeEnum.mysql, DBTypeEnum.postgresql, DBTypeEnum.mongodb, DBTypeEnum.redis].includes(
                 db.dbType as DBTypeEnum
               ) && (
                 <Center
