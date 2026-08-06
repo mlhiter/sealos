@@ -55,6 +55,11 @@ export const LogTable = ({
   const isJsonMode = formHook.watch('isJsonMode');
   const { exportLogs } = useLogStore();
 
+  const getFieldLabel = useCallback(
+    (fieldKey: string) => t('common.log_table.' + fieldKey, { defaultValue: fieldKey }),
+    [t]
+  );
+
   const generateFieldList = useCallback((data: any[], prevFieldList: FieldItem[] = []) => {
     if (!data.length) return [];
 
@@ -90,9 +95,9 @@ export const LogTable = ({
       'filterKeys',
       generateFieldList(data)
         .filter((field) => !excludeFields.includes(field.value))
-        .map((field) => ({ value: field.value, label: field.label }))
+        .map((field) => ({ value: field.value, label: getFieldLabel(field.value) }))
     );
-  }, [data, generateFieldList, formHook]);
+  }, [data, generateFieldList, formHook, getFieldLabel]);
 
   useEffect(() => {
     const visibleCount = fieldList.filter((field) => field.checked).length;
@@ -106,7 +111,7 @@ export const LogTable = ({
       .map((field) => ({
         accessorKey: field.accessorKey,
         header: () => {
-          return t('common.log_table.' + field.label) || field.label;
+          return getFieldLabel(field.value);
         },
         cell: ({ row }) => {
           let value = get(row.original, field.accessorKey, '');
@@ -135,7 +140,7 @@ export const LogTable = ({
           isError: (row: any) => row.stream === 'stderr'
         }
       }));
-  }, [fieldList]);
+  }, [fieldList, getFieldLabel]);
 
   const table = useReactTable({
     data: data,
@@ -266,7 +271,7 @@ export const LogTable = ({
                     }
                   }}
                 >
-                  {item.label}
+                  {getFieldLabel(item.value)}
                 </Checkbox>
               ))}
             </CheckboxGroup>
