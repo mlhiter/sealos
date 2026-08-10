@@ -79,6 +79,11 @@ func GetUserRole(roleType userv1.RoleType) []rbacv1.PolicyRule {
 				Resources: []string{"*"},
 				Verbs:     []string{"list", "watch", "get"},
 			},
+			{
+				APIGroups: []string{"terminal.sealos.io"},
+				Resources: []string{"terminals"},
+				Verbs:     []string{"create", "delete", "get", "list", "patch", "update", "watch"},
+			},
 		}
 	default:
 		return []rbacv1.PolicyRule{}
