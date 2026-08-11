@@ -121,9 +121,7 @@ const Form = ({
           getValues('appName') &&
           getValues('imageName') &&
           (getValues('secret.use')
-            ? getValues('secret.username') &&
-              getValues('secret.password') &&
-              getValues('secret.serverAddress')
+            ? getValues('secret.username') && getValues('secret.password')
             : true)
       },
       {
@@ -302,14 +300,14 @@ const Form = ({
     const sortedCpuList = !!gpuType
       ? cpuList
       : cpu !== undefined
-        ? [...new Set([...cpuList, cpu])].sort((a, b) => a - b)
-        : cpuList;
+      ? [...new Set([...cpuList, cpu])].sort((a, b) => a - b)
+      : cpuList;
 
     const sortedMemoryList = !!gpuType
       ? memoryList
       : memory !== undefined
-        ? [...new Set([...memoryList, memory])].sort((a, b) => a - b)
-        : memoryList;
+      ? [...new Set([...memoryList, memory])].sort((a, b) => a - b)
+      : memoryList;
 
     return {
       cpu: sliderNumber2MarkList({
@@ -577,20 +575,6 @@ const Form = ({
                           }
                           {...register('secret.password', {
                             required: t('The password cannot be empty') || ''
-                          })}
-                        />
-                      </FormControl>
-                      <FormControl mt={4} isInvalid={!!errors.secret?.serverAddress} w={'420px'}>
-                        <Box mb={1} fontSize={'sm'}>
-                          {t('Image Address')}
-                        </Box>
-                        <Input
-                          backgroundColor={
-                            getValues('imageName') ? 'myWhite.500' : 'grayModern.100'
-                          }
-                          placeholder={`${t('Image Address')}`}
-                          {...register('secret.serverAddress', {
-                            required: t('The image cannot be empty') || ''
                           })}
                         />
                       </FormControl>
@@ -1020,8 +1004,8 @@ const Form = ({
                             const valText = env.value
                               ? env.value
                               : env.valueFrom
-                                ? 'value from | ***'
-                                : '';
+                              ? 'value from | ***'
+                              : '';
                             return (
                               <tr key={env.id}>
                                 <th>{env.key}</th>

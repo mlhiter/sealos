@@ -48,6 +48,16 @@ import { getInitData } from '@/api/platform';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 12);
 
+export const resolveAppImageName = ({
+  deployedImage,
+  originImageName,
+  usesPrivateRegistry
+}: {
+  deployedImage: string;
+  originImageName: string;
+  usesPrivateRegistry: boolean;
+}) => (usesPrivateRegistry ? deployedImage || originImageName : originImageName || deployedImage);
+
 // Calculate app  status
 function calculateAppStatus(
   appDeploy: V1Deployment | V1StatefulSet
@@ -214,7 +224,7 @@ export const adaptPod = (pod: V1Pod): PodDetailType => {
     nodeName: pod.spec?.nodeName || 'node name',
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses
-      ? (pod.status?.containerStatuses[0]?.restartCount ?? 0)
+      ? pod.status?.containerStatuses[0]?.restartCount ?? 0
       : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp),
     usedCpu: {
@@ -415,6 +425,10 @@ export const adaptAppDetail = async (
     );
   };
 
+  const secret = atobSecretYaml(deployKindsMap?.Secret?.data?.['.dockerconfigjson']);
+  const deployedImage = appDeploy.spec?.template?.spec?.containers?.[0]?.image || '';
+  const originImageName = appDeploy?.metadata?.annotations?.originImageName || '';
+
   return {
     labels: appDeploy?.metadata?.labels || {},
     crYamlList: configs,
@@ -423,10 +437,11 @@ export const adaptAppDetail = async (
     createTime: dayjs(appDeploy.metadata?.creationTimestamp).format('YYYY-MM-DD HH:mm'),
     status: calculateAppStatus(appDeploy),
     isPause: !!appDeploy?.metadata?.annotations?.[pauseKey],
-    imageName:
-      appDeploy?.metadata?.annotations?.originImageName ||
-      appDeploy.spec?.template?.spec?.containers?.[0]?.image ||
-      '',
+    imageName: resolveAppImageName({
+      deployedImage,
+      originImageName,
+      usesPrivateRegistry: secret.use
+    }),
     runCMD: appDeploy.spec?.template?.spec?.containers?.[0]?.command?.join(' ') || '',
     cmdParam:
       (appDeploy.spec?.template?.spec?.containers?.[0]?.args?.length === 1
@@ -510,8 +525,8 @@ export const adaptAppDetail = async (
           domain: isCustomDomain
             ? SEALOS_DOMAIN
             : item?.nodePort
-              ? domain
-              : domain.split('.').slice(1).join('.') || SEALOS_DOMAIN
+            ? domain
+            : domain.split('.').slice(1).join('.') || SEALOS_DOMAIN
         };
         return result;
       }) || [],
@@ -538,7 +553,7 @@ export const adaptAppDetail = async (
         }
       : defaultEditVal.hpa,
     configMapList: getConfigMapList(),
-    secret: atobSecretYaml(deployKindsMap?.Secret?.data?.['.dockerconfigjson']),
+    secret,
     storeList: deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates
       ? deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates.map((item) => ({
           name: item.metadata?.name || '',
