@@ -210,10 +210,10 @@ export const memoryFormatToMi = (memory: string) => {
 };
 
 /**
- * print memory to Mi of Gi
+ * Print memory in GiB for the app detail view.
  */
 export const printMemory = (val: number) => {
-  return val >= 1024 ? `${val / 1024} Gi` : `${val} Mi`;
+  return `${val / 1024} GiB`;
 };
 
 /**

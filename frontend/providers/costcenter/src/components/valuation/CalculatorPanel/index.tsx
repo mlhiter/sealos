@@ -282,7 +282,7 @@ export default function CalculatorPanel({
             </div>
             <div className="flex items-center gap-10">
               <CalculatorSlider
-                unit={'G'}
+                unit={'GiB'}
                 rangeList={MEMORY_RANGE}
                 value={config.resources.memory.idx}
                 onChange={(v) => {
@@ -290,7 +290,7 @@ export default function CalculatorPanel({
                 }}
               />
               <CalculatorNumberInput
-                unit={'G'}
+                unit={'GiB'}
                 value={config.resources.memory.val}
                 onChange={(str, v) => {
                   updateMemoryVal(v);
@@ -307,7 +307,7 @@ export default function CalculatorPanel({
             </div>
             <div className="flex items-center gap-10">
               <CalculatorNumberInput
-                unit="G"
+                unit="GiB"
                 value={config.resources.storage}
                 onChange={(str, val) => {
                   if (val < 0) return;

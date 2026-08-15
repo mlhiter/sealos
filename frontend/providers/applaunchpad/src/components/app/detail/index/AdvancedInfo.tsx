@@ -280,7 +280,7 @@ const AdvancedInfo = ({ app = MOCK_APP_DETAIL }: { app: AppDetailType }) => {
                                 color={'grayModern.600'}
                                 fontSize={'sm'}
                               >
-                                {item.value} Gi
+                                {item.value} GiB
                               </Box>
                             </Box>
                           </Flex>
