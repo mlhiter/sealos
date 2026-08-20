@@ -29,7 +29,7 @@ export const resourcePropertyMap: Record<
     scale: 1000
   },
   memory: {
-    unit: 'Gi',
+    unit: 'GiB',
     icon: ({ className, size = 20 }: ResourceIconProps) => (
       <MemoryStickIcon className={className} size={size} />
     ),
@@ -50,14 +50,14 @@ export const resourcePropertyMap: Record<
     scale: 1
   },
   storage: {
-    unit: 'Gi',
+    unit: 'GiB',
     icon: ({ className, size = 20 }: ResourceIconProps) => (
       <HardDriveIcon className={className} size={size} />
     ),
     scale: 1024
   },
   traffic: {
-    unit: 'Gi',
+    unit: 'GiB',
     icon: ({ className, size = 20 }: ResourceIconProps) => (
       <NetworkIcon className={className} size={size} />
     ),

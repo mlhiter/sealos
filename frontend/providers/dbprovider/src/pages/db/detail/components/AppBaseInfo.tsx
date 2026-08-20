@@ -263,7 +263,7 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
             label: 'limit_memory',
             value: printMemory(db.totalMemory)
           },
-          { label: 'storage', value: `${db.totalStorage}Gi` }
+          { label: 'storage', value: `${db.totalStorage}GiB` }
         ]
       }
     ],

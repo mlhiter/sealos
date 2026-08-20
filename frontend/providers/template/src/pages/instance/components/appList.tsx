@@ -117,7 +117,7 @@ export default function AppList({ instanceName }: { instanceName: string }) {
         title: 'Storage',
         key: 'store',
         render: (item: AppListItemType) => (
-          <>{item.storeAmount > 0 ? `${item.storeAmount}Gi` : '-'}</>
+          <>{item.storeAmount > 0 ? `${item.storeAmount}GiB` : '-'}</>
         )
       },
       {

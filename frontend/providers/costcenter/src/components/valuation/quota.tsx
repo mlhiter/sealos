@@ -42,7 +42,7 @@ const quotaMeta: Record<UserQuotaItemType['type'], QuotaMeta> = {
     pieTitle: 'objectstorage/bucket_short'
   },
   'objectstorage/size': {
-    unit: 'GB',
+    unit: 'GiB',
     bg: '#F182AA',
     icon: ObjectStorageIcon,
     pieTitle: 'objectstorage/size_short'

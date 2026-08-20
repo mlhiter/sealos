@@ -25,19 +25,19 @@ export default function Monitor({ needStyles = true }: { needStyles?: boolean })
         label: t('common:memory'),
         value: data?.data?.totalMemory,
         icon: <MemoryIcon />,
-        unit: 'GB'
+        unit: 'GiB'
       },
       {
         label: t('common:storage'),
         value: data?.data?.totalStorage,
         icon: <StorageIcon />,
-        unit: 'GB'
+        unit: 'GiB'
       },
       {
         label: t('common:flow'),
         value: `~`,
         icon: <FlowIcon />,
-        unit: 'GB'
+        unit: 'GiB'
       },
       ...(Number(data?.data?.totalGpuCount) > 0
         ? [
