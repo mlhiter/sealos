@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adaptAppDetail } from '@/utils/adapt';
+import { adaptAppDetail, sliderNumber2MarkList } from '@/utils/adapt';
 import type { DeployKindsType } from '@/types/app';
 
 const createDeployment = (): DeployKindsType =>
@@ -290,5 +290,27 @@ describe('adaptAppDetail', () => {
       openNodePort: true,
       openPublicDomain: false
     });
+  });
+});
+
+describe('sliderNumber2MarkList', () => {
+  it('renders binary resource marks in GiB', () => {
+    expect(
+      sliderNumber2MarkList({
+        val: [64, 512, 1024],
+        type: 'memory'
+      })
+    ).toEqual([
+      { label: '0.0625 GiB', value: 64 },
+      { label: '0.5 GiB', value: 512 },
+      { label: '1 GiB', value: 1024 }
+    ]);
+
+    expect(
+      sliderNumber2MarkList({
+        val: [1],
+        type: 'ephemeralStorage'
+      })
+    ).toEqual([{ label: '1 GiB', value: 1 }]);
   });
 });

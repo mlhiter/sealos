@@ -577,7 +577,7 @@ export const adaptAppDetail = async (
         // and only fall back to HTTP when an Ingress proves this TCP port is application traffic.
         const appProtocol = APPLICATION_PROTOCOLS.includes(serviceAppProtocol)
           ? (serviceAppProtocol as ApplicationProtocolType)
-          : ingressAppProtocol ?? (ingress && protocol === 'TCP' ? 'HTTP' : undefined);
+          : (ingressAppProtocol ?? (ingress && protocol === 'TCP' ? 'HTTP' : undefined));
 
         const isCustomDomain =
           !domain.endsWith(SEALOS_DOMAIN) &&
@@ -600,8 +600,8 @@ export const adaptAppDetail = async (
           domain: isCustomDomain
             ? SEALOS_DOMAIN
             : item?.nodePort
-            ? domain
-            : domain.split('.').slice(1).join('.') || SEALOS_DOMAIN,
+              ? domain
+              : domain.split('.').slice(1).join('.') || SEALOS_DOMAIN,
           routes: ingressPaths.length
             ? ingressPaths.map((path) => ({
                 path: path.path || '/',
@@ -732,12 +732,10 @@ export const sliderNumber2MarkList = ({
   return newVal.map((item) => ({
     label:
       type === 'memory'
-        ? item >= 1024
-          ? `${item / 1024} G`
-          : `${item} M`
+        ? `${item / 1024} GiB`
         : type === 'ephemeralStorage'
-        ? `${item}`
-        : `${item / 1000}`,
+          ? `${item} GiB`
+          : `${item / 1000}`,
     value: item
   }));
 };

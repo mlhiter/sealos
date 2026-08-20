@@ -125,7 +125,7 @@ export default function SecondaryLinks() {
 
   const getQuotaUnit = (type: WorkspaceQuotaItem['type']) => {
     if (type === 'cpu') return 'C';
-    if (type === 'memory' || type === 'storage') return 'GB';
+    if (type === 'memory' || type === 'storage') return 'GiB';
     if (type === 'gpu') return t('common:resource_unit_card');
     return '';
   };

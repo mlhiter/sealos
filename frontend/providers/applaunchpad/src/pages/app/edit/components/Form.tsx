@@ -1173,7 +1173,7 @@ const Form = ({
                   step={1}
                 />
                 <Box ml={5} transform={'translateY(10px)'} color={'grayModern.500'}>
-                  Gi
+                  GiB
                 </Box>
               </Flex> */}
             </Box>
@@ -1260,7 +1260,7 @@ const Form = ({
                             }}
                           />
                           <Box fontSize={'12px'} color={'grayModern.900'}>
-                            Gi
+                            GiB
                           </Box>
                         </Flex>
                         <Flex
@@ -1478,7 +1478,7 @@ const Form = ({
                                   color={'grayModern.900'}
                                   fontSize={'sm'}
                                 >
-                                  {item.value} Gi
+                                  {item.value} GiB
                                 </Box>
                               </Box>
                             </Flex>
@@ -1578,7 +1578,7 @@ const Form = ({
                                     color={'grayModern.900'}
                                     fontSize={'sm'}
                                   >
-                                    {item.value} Gi
+                                    {item.value} GiB
                                   </Box>
                                 </Box>
                               </Flex>
