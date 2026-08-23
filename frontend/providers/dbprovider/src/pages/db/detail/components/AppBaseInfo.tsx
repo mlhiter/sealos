@@ -4,8 +4,7 @@ import {
   editPassword,
   getDBSecret,
   getDBServiceByName,
-  getDBStatefulSetByName,
-  resolveDBConnectTarget
+  getDBStatefulSetByName
 } from '@/api/db';
 import FormControl from '@/components/FormControl';
 import MyIcon from '@/components/Icon';
@@ -279,13 +278,14 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
     [db]
   );
 
-  const directConnectComponent = directConnectComponentMap[db.dbType];
   const directConnectDisabled = !supportConnectDB || db.status.value !== DBStatusEnum.Running;
 
   const onclickConnectDB = useCallback(async () => {
-    if (!secret || !directConnectComponent || directConnectDisabled) return;
+    if (!secret || directConnectDisabled) return;
     const ns = getUserSession()?.user?.nsid;
-    if (!ns) {
+    const statefulSetName = dbStatefulSet?.metadata?.name;
+    const container = dbStatefulSet?.spec?.template?.spec?.containers?.[0]?.name;
+    if (!ns || !statefulSetName || !container) {
       toast({
         title: 'Missing terminal parameters',
         status: 'error'
@@ -294,11 +294,6 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
     }
 
     try {
-      const { podName } = await resolveDBConnectTarget({
-        dbName: db.dbName,
-        component: directConnectComponent
-      });
-
       const commandMap = {
         [DBTypeEnum.postgresql]: `psql '${secret.connection}'`,
         [DBTypeEnum.mongodb]: `mongosh '${secret.connection}'`,
@@ -329,15 +324,15 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
         pathname: '/exec',
         query: {
           ns,
-          pod: podName,
-          container: directConnectComponent,
+          pod: `${statefulSetName}-0`,
+          container,
           ...(command ? { command: JSON.stringify(command) } : {})
         },
         messageData: {
           type: 'InternalAppCall',
           ns,
-          pod: podName,
-          container: directConnectComponent,
+          pod: `${statefulSetName}-0`,
+          container,
           ...(command ? { command } : {})
         }
       });
@@ -347,7 +342,7 @@ const AppBaseInfo = ({ db = defaultDBDetail }: { db: DBDetailType }) => {
         status: 'error'
       });
     }
-  }, [db.dbName, db.dbType, directConnectComponent, directConnectDisabled, secret, toast]);
+  }, [db.dbType, dbStatefulSet, directConnectDisabled, secret, toast]);
 
   const refetchAll = () => {
     refetchDBStatefulSet();
