@@ -295,10 +295,10 @@ export const storageFormatToGi = (value: string | undefined, defaultValue: numbe
 };
 
 /**
- * Print memory in GiB.
+ * print memory to Mi of Gi
  */
 export const printMemory = (val: number) => {
-  return `${val / 1024} GiB`;
+  return val >= 1024 ? `${Math.round(val / 1024)} Gi` : `${val} Mi`;
 };
 
 /**

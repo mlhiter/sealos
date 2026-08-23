@@ -399,14 +399,14 @@ export default function MonitorPage({ appName }: { appName: string }) {
                   )}
                 </Box>
                 <Box mt={'20px'} fontSize={'14px'} fontWeight={'bold'} color={'#000000'}>
-                  {t('gpu_memory')}: {gpuMemoryLatestAvg} GiB
+                  {t('gpu_memory')}: {gpuMemoryLatestAvg} GB
                 </Box>
                 <Box mt={'24px'} height={'200px'} position={'relative'}>
                   {gpuMemoryChartData?.yData?.length > 0 ? (
                     <MonitorChart
                       data={gpuMemoryChartData}
                       title={'chartTitle'}
-                      unit=" GiB"
+                      unit=" GB"
                       yAxisMax="auto"
                       chartColor={GPU_CHART_COLOR}
                     />

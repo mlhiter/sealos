@@ -401,7 +401,7 @@ const DBList = ({
         header: () => t('storage'),
         cell: ({ row }) => (
           <Flex alignItems={'center'}>
-            <Text>{row.original.totalStorage}GiB</Text>
+            <Text>{row.original.totalStorage}Gi</Text>
             {alerts[row.original.name]?.reason === 'disk is full' && (
               <Flex
                 alignItems={'center'}

@@ -11,7 +11,7 @@ import * as jsonpatch from 'fast-json-patch';
 import { Base64 } from 'js-base64';
 
 export function formatSize(size: number, fixedNumber = 2) {
-  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   let i = 0;
   while (size >= 1024) {
     size /= 1024;

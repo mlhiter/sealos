@@ -336,7 +336,7 @@ export default function LicenseApp() {
                   MEMORY
                 </Text>
                 <Text fontSize="16px" fontWeight="600">
-                  {systemInfo?.totalMemory || '0'} GiB
+                  {systemInfo?.totalMemory || '0'} GB
                 </Text>
               </GridItem>
             </Grid>
@@ -553,7 +553,7 @@ export default function LicenseApp() {
                               />
                               <RecordItem
                                 label={t('Memory')}
-                                value={`${tokenData?.data.totalMemory} GiB`}
+                                value={`${tokenData?.data.totalMemory} GB`}
                               />
                               <RecordItem label={t('Nodes')} value={tokenData?.data.nodeCount} />
                               <RecordItem label={t('Users')} value={tokenData?.data.userCount} />

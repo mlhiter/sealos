@@ -172,7 +172,7 @@ function ResourcesDistributeTable({ data }: { data: Parameters<typeof distribute
                         <Td w="190px">{keyName}</Td>
                         <Td>{value.cpuMemory.limits.cpu}</Td>
                         <Td>{value.cpuMemory.limits.memory}</Td>
-                        <Td>{value.storage} GiB</Td>
+                        <Td>{value.storage} Gi</Td>
                         <Td>{value.other?.replicas ?? data.replicas}</Td>
                       </Tr>
                     );
@@ -847,7 +847,7 @@ const Form = ({
                 <Flex alignItems={'center'}>
                   <Label w={100}>{t('storage')}</Label>
                   <MyTooltip
-                    label={`${t('storage_range')}${minStorage}~${SystemEnv.STORAGE_MAX_SIZE} GiB`}
+                    label={`${t('storage_range')}${minStorage}~${SystemEnv.STORAGE_MAX_SIZE} Gi`}
                   >
                     <NumberInput
                       w={'180px'}
@@ -868,11 +868,11 @@ const Form = ({
                           required: t('storage_cannot_empty'),
                           min: {
                             value: minStorage,
-                            message: `${t('storage_min')}${minStorage} GiB`
+                            message: `${t('storage_min')}${minStorage} Gi`
                           },
                           max: {
                             value: SystemEnv.STORAGE_MAX_SIZE,
-                            message: `${t('storage_max')}${SystemEnv.STORAGE_MAX_SIZE} GiB`
+                            message: `${t('storage_max')}${SystemEnv.STORAGE_MAX_SIZE} Gi`
                           },
                           valueAsNumber: true
                         })}
@@ -908,7 +908,7 @@ const Form = ({
                         transform={'translateY(-50%)'}
                         color={'grayModern.600'}
                       >
-                        GiB
+                        Gi
                       </Box>
                     </NumberInput>
                   </MyTooltip>

@@ -12,11 +12,11 @@ const sourceMap = {
   },
   memory: {
     color: '#36ADEF',
-    unit: 'GiB'
+    unit: 'Gi'
   },
   storage: {
     color: '#8172D8',
-    unit: 'GiB'
+    unit: 'Gi'
   },
   gpu: {
     color: '#89CD11',

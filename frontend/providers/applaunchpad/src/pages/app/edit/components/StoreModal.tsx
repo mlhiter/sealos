@@ -98,7 +98,7 @@ const StoreModal = ({
                 label={
                   maxValue === 0
                     ? t('Storage limit reached')
-                    : `${t('Storage Range')}: ${minValue}~${maxValue} GiB`
+                    : `${t('Storage Range')}: ${minValue}~${maxValue} Gi`
                 }
               >
                 <NumberInput
@@ -109,11 +109,11 @@ const StoreModal = ({
                     required: t('Storage Value can not empty') || 'Storage Value can not empty',
                     min: {
                       value: minValue,
-                      message: `${t('Min Storage Value')} ${minValue} GiB`
+                      message: `${t('Min Storage Value')} ${minValue} Gi`
                     },
                     max: {
                       value: maxValue,
-                      message: `${t('Max Storage Value')} ${maxValue} GiB`
+                      message: `${t('Max Storage Value')} ${maxValue} Gi`
                     },
                     valueAsNumber: true
                   })}
@@ -130,7 +130,7 @@ const StoreModal = ({
                     transform={'translateY(-50%)'}
                     color={'blackAlpha.600'}
                   >
-                    GiB
+                    Gi
                   </Box>
                   <NumberInputField
                     _hover={{

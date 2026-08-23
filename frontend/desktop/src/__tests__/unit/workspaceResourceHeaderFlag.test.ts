@@ -142,20 +142,4 @@ describe('workspace resource header flag', () => {
     expect(screen.queryByText('common:credits')).toBeNull();
     await waitFor(() => expect(mockedGetResource).toHaveBeenCalledTimes(1));
   });
-
-  it('formats binary memory and storage quotas as GiB', async () => {
-    mockedGetResource.mockResolvedValueOnce({
-      data: {
-        workspaceQuota: [
-          { type: 'memory', used: 1, limit: 2, available: 1, usagePercent: 50 },
-          { type: 'storage', used: 3, limit: 4, available: 1, usagePercent: 75 }
-        ]
-      }
-    } as never);
-
-    renderSecondaryLinks(true);
-
-    expect(await screen.findByText('1GiB')).not.toBeNull();
-    expect(screen.queryByText('1GB')).toBeNull();
-  });
 });
